@@ -31,6 +31,8 @@ import (
   "fmt"
   "log"
   "math"
+  "sort"
+  "strings"
 )
 
 type TrieNode struct {
@@ -44,6 +46,10 @@ type TriePage struct {
   Rank float64
 }
 
+func (t*TriePage) GetRank() float64 {
+  return t.Rank
+}
+
 
 func newTriePage(rp *RankedPage) *TriePage {
   t :=  &TriePage {
@@ -51,6 +57,10 @@ func newTriePage(rp *RankedPage) *TriePage {
     Rank: rp.Rank,
   }
   return t
+}
+
+func NormalizeSuggestionPrefix(prefix string) string {
+  return strings.ToLower(prefix)
 }
 
 func CreateAndWriteTrie(inputFile string, outputFile string) (err error) {
@@ -61,12 +71,11 @@ func CreateAndWriteTrie(inputFile string, outputFile string) (err error) {
   i := 0
   for page := range rpchan {
     tp := newTriePage(page)
-
-    trie.AddEntry(tp.Title, tp)
-    trie.GetSuggestions(tp.Title)
-
-    if i % 10000 == 0 {
+    trie.AddEntry(NormalizeSuggestionPrefix(tp.Title), tp)
+    if i % 10000 == 0 && i > 0 {
       log.Printf("Inserted page #%d", i)
+      sug, _ := trie.GetTopSuggestions("b", 10)
+      log.Printf("Suggestions: %q", sug)
     }
     i++
   }
@@ -81,12 +90,24 @@ const endLetter = 'Z'
 const noLetters= int(endLetter) - int(startLetter) +1 // optimised for english... with a couple left over
 
 type Rankable interface {
-  Rank() float64
+  GetRank() float64
+}
+
+type ByRank []Rankable
+
+func (this ByRank) Len() int {
+    return len(this)
+}
+func (this ByRank) Less(i, j int) bool {
+    return this[i].GetRank() > this[j].GetRank()
+}
+func (this ByRank) Swap(i, j int) {
+    this[i], this[j] = this[j], this[i]
 }
 
 type branch struct {
     children []*branch
-    value interface{}
+    value Rankable
     shortcut []byte
     maxRank float64 // maximum rank value below this node
 }
@@ -126,13 +147,16 @@ func (this *Trie) EnsureCapacity(children []*branch, index int) []*branch {
     return children
 }
 
-func (this *Trie) AddEntry(entry string, value interface{}) {
+func (this *Trie) AddEntry(entry string, value Rankable) {
     this.AddToBranch(this.tree, []byte(entry), value)
 }
 
-func (this *Trie) AddToBranch(t *branch, remEntry []byte, value interface{}) {
-    //Update ranking
-    switch r := value.(type) { case Rankable: t.maxRank = math.Max(r.Rank(), t.maxRank) }
+func (this *Trie) AddToBranch(t *branch, remEntry []byte, value Rankable) {
+    oldRank := t.maxRank
+    switch r := value.(type) {
+      case Rankable:
+        t.maxRank = math.Max(r.GetRank(), t.maxRank)
+    }
 
     // can we cheat?
     if t.shortcut == nil {
@@ -168,6 +192,7 @@ func (this *Trie) AddToBranch(t *branch, remEntry []byte, value interface{}) {
             newTBranch := &branch {
                 children: t.children,
                 value: t.value,
+                maxRank: oldRank,
                 shortcut: ttail,
             }
             t.children = make([]*branch, noLetters, noLetters)
@@ -211,6 +236,8 @@ func (this *Trie) DumpBranch(t *branch, depth int) {
     fmt.Printf("- cheat: %s\n", t.shortcut)
     for x := 0; x < depth; x ++ { fmt.Print("  ") }
     fmt.Printf("- value: %s\n",t.value)
+    for x := 0; x < depth; x ++ { fmt.Print("  ") }
+    fmt.Printf("- maxRank: %f\n",t.maxRank)
     if t.children != nil {
         for x := 0; x < depth; x ++ { fmt.Print("  ") }
         fmt.Printf("- children:\n")
@@ -226,26 +253,49 @@ func (this *Trie) DumpBranch(t *branch, depth int) {
     }
 }
 
-func (this *Trie) GetSuggestions(entry string) ([]interface{}, bool) {
-  start := make([]interface{}, 0, 10)
-  return this.getSuggestions(entry, start)
+type topSuggestionQuery struct {
+  suggestions []Rankable
+  rankCutoff float64
+  n int
 }
 
-func (this *branch) allValuesBelow(values []interface{}) ([]interface{}) {
-  if this.value != nil {
-    values = append(values, this.value)
+func (this *Trie) GetTopSuggestions(entry string, n int) ([]Rankable, bool) {
+  tsq := topSuggestionQuery {
+    suggestions: make([]Rankable, 0, n+100),
+    rankCutoff: -1,
+    n: n,
   }
 
-  for _, branch := range this.children {
-    if(branch != nil) { // Dear author: why does this happen?
-      values = branch.allValuesBelow(values)
+  tsq, ok := this.getTopSuggestions(entry, tsq)
+  s := tsq.suggestions
+  sort.Sort(ByRank(s))
+  if len(s) > n {
+    return s[:n], ok
+  } else {
+    return s, ok
+  }
+}
+
+func (this *branch) topValuesBelow(tsq topSuggestionQuery) (topSuggestionQuery) {
+  if this.value != nil {
+    if this.maxRank > tsq.rankCutoff {
+      if len(tsq.suggestions) > tsq.n {
+        tsq.rankCutoff = this.maxRank
+      }
+      tsq.suggestions = append(tsq.suggestions, this.value)
     }
   }
 
-  return values
+  for _, branch := range this.children {
+    if branch != nil && branch.maxRank > tsq.rankCutoff { // Only explore reasonable subtrees
+      tsq = branch.topValuesBelow(tsq)
+    }
+  }
+
+  return tsq
 }
 
-func (this *Trie) getSuggestions(entry string, suggestions []interface{}) ([]interface{}, bool) {
+func (this *Trie) getTopSuggestions(entry string, tsq topSuggestionQuery) (topSuggestionQuery, bool) {
     t := this.tree
     eb := []byte(entry)
     // it's <= here to ensure we get to the cheat comparison nil on a valid path
@@ -256,11 +306,11 @@ func (this *Trie) getSuggestions(entry string, suggestions []interface{}) ([]int
         for y = 0; y < len(s); y++ {
             if x+y >= len(eb) {
                 //return nil, true
-                return t.allValuesBelow(suggestions), true
+                return t.topValuesBelow(tsq), true
             }
             if s[y] != eb[x+y] {
                 // NO WAY, RETURN NOTHING
-                return suggestions, false
+                return tsq, false
             }
         }
         x += y
@@ -276,26 +326,24 @@ func (this *Trie) getSuggestions(entry string, suggestions []interface{}) ([]int
             } else {
                 mapindex, exists := this.unicodeMap[ir]
                 if !exists {
-                    //return nil, false // no mapping :/
-                    return suggestions, false
+                    return tsq, false
                 } else {
                     index = mapindex
                 }
             }
             if index > len(t.children)-1 || t.children[index] == nil {
-                //return nil, false
-                return suggestions, false
+                return tsq, false
             }
             t = t.children[index]
             eb = eb[x:]
             x = 0
         }
     }
-    return t.allValuesBelow(suggestions), true
+    return t.topValuesBelow(tsq), true
 }
 
 
-func (this *Trie) GetEntry(entry string) (value interface{}, validPath bool) {
+func (this *Trie) GetEntry(entry string) (value Rankable, validPath bool) {
     t := this.tree
     eb := []byte(entry)
     // it's <= here to ensure we get to the cheat comparison nil on a valid path
