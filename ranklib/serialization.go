@@ -32,6 +32,23 @@ func ReadPages(fileName string, cp chan *Page) {
   }
 }
 
+func ReadRankedPages(fileName string, cp chan *RankedPage) {
+  defer close(cp)
+  f, err := os.Open(fileName)
+  if err != nil { panic(err) }
+  defer f.Close()
+
+  gobDecoder := gob.NewDecoder(f)
+  var length int
+  gobDecoder.Decode(&length)
+
+  for i := 0; i < length; i++ {
+    var page RankedPage
+    gobDecoder.Decode(&page)
+    cp <- &page
+  }
+}
+
 func WritePages(fileName string, numPages int, cp chan *Page) {
   outputFile, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0600)
   if err != nil { panic(err) }

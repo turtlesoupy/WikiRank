@@ -16,9 +16,20 @@ func main() {
   }
 
   switch cmd := os.Args[1]; cmd {
+  case "create_trie":
+    if len(os.Args) <= 3 {
+      log.Fatal("Create Trie: required argument 'ranked_input.gob' / 'trie.gob' missing")
+      return
+    }
+    inputName := os.Args[2]
+    outputName := os.Args[3]
+    log.Printf("Creating tie from '%s' into '%s'", inputName, outputName)
+    err := ranklib.CreateAndWriteTrie(inputName, outputName)
+    if err != nil { panic(err) }
   case "pagerank":
     if len(os.Args) <= 3 {
-      log.Fatal("PageRank: Rrequired argument 'input.gob' / 'ranked_output.gob' missing")
+      log.Fatal("PageRank: Required argument 'input.gob' / 'ranked_output.gob' missing")
+      return
     }
     inputName := os.Args[2]
     outputName := os.Args[3]

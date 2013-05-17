@@ -12,7 +12,7 @@ type RankedPage struct {
 
 func pageRank(pages []RankedPage, teleportProbability float64, convergenceCriteron float64) {
   beta, epsilon := teleportProbability, convergenceCriteron
-  log.Printf("Ranking with beta='%f', epsilon='%f", beta, epsilon)
+  log.Printf("Ranking with beta='%f', epsilon='%f'", beta, epsilon)
   n := len(pages)
   idRemap := make(map[uint64] uint32, n)
   lastRank := make([]float64, n)
