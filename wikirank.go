@@ -16,6 +16,16 @@ func main() {
   }
 
   switch cmd := os.Args[1]; cmd {
+  case "pagerank":
+    if len(os.Args) <= 3 {
+      log.Fatal("PageRank: Rrequired argument 'input.gob' / 'ranked_output.gob' missing")
+    }
+    inputName := os.Args[2]
+    outputName := os.Args[3]
+    log.Printf("Page ranking from '%s' into '%s", inputName, outputName)
+    err := ranklib.RankAndWrite(inputName, outputName)
+    if err != nil { panic(err) }
+
   case "extract_graph":
     if len(os.Args) <= 3 {
       log.Fatal("Extract: Required argument 'input.xml' / 'output.gob' missing")
@@ -27,9 +37,9 @@ func main() {
     log.Printf("Extracting from '%s' into '%s'", filename, outputName)
     err := ranklib.ReadFrom(filename, outputName)
     if err != nil { panic(err) }
-    log.Printf("All done!")
   default:
     log.Fatalf("Unknown command '%s'", cmd)
     return
   }
+  log.Printf("All done!")
 }

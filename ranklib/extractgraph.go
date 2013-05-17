@@ -6,7 +6,7 @@ import (
   "fmt"
   "regexp"
   "os"
-  "encoding/gob"
+  "io"
 )
 
 var titleFilter = regexp.MustCompile("^(File|Talk:|Special|Wikipedia|Wiktionary|User|User Talk:)")
@@ -32,20 +32,21 @@ func (p *pageElement) String() string {
   return fmt.Sprintf("pageElement[title=%s,id=%d]", p.Title, p.Id)
 }
 
-func yieldPages(fileName string, cp chan *pageElement) {
+func yieldPageElements(fileName string, cp chan *pageElement) {
   xmlFile, err := os.Open(fileName)
   if(err != nil) { panic(err) }
 
   defer xmlFile.Close()
+  defer close(cp)
 
   log.Printf("Starting parse")
   decoder := xml.NewDecoder(xmlFile)
   for {
     token, err := decoder.Token()
-    if err != nil {
-      panic(err)
-    } else if token == nil {
+    if token == nil || err == io.EOF {
       break
+    } else if err != nil {
+      panic(err)
     }
 
     switch e := token.(type) {
@@ -65,8 +66,6 @@ func yieldPages(fileName string, cp chan *pageElement) {
     default:
     }
   }
-
-  close(cp)
 }
 
 
@@ -93,18 +92,14 @@ func newPage(pe *pageElement, titleIdMap map[string]uint64) *Page {
 
 
 func ReadFrom(fileName string, outputName string) (err error) {
-  outputFile, err := os.OpenFile(outputName, os.O_WRONLY|os.O_CREATE, 0600)
-  if err != nil { panic(err) }
-  defer outputFile.Close()
+  pageInputChan := make(chan *pageElement, 1000)
+  go yieldPageElements(fileName, pageInputChan)
 
-  pageChan := make(chan *pageElement, 1000)
-  go yieldPages(fileName, pageChan)
-
-  titleIdMap := make(map[string]uint64, 10000000)
+  titleIdMap := make(map[string]uint64, 12000000)
   numPages := 0
   log.Printf("Starting title pass")
   // First pass: fill title id map
-  for page := range pageChan {
+  for page := range pageInputChan {
     titleIdMap[page.Title] = page.Id
     numPages++
 
@@ -115,15 +110,13 @@ func ReadFrom(fileName string, outputName string) (err error) {
 
   log.Printf("Done title pass, starting write pass")
 
-  pageChan = make(chan *pageElement, 1000)
-  go yieldPages(fileName, pageChan)
-  gobEncoder := gob.NewEncoder(outputFile)
-  gobEncoder.Encode(numPages)
-
+  pageInputChan = make(chan *pageElement, 1000)
+  pageOutputChan := make(chan *Page, 1000)
+  defer close(pageOutputChan)
+  go WritePages(outputName, numPages, pageOutputChan)
   i := 0
-  for page := range pageChan {
-    p := newPage(page, titleIdMap)
-    gobEncoder.Encode(p)
+  for page := range pageInputChan {
+    pageOutputChan <- newPage(page, titleIdMap)
     i++
     if i % 10000 == 0 {
       log.Printf("Page #%d", numPages)
