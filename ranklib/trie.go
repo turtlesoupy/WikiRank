@@ -35,12 +35,6 @@ import (
   "container/heap"
 )
 
-type TrieNode struct {
-  Prefix string
-  Data *TriePage
-  Children []TrieNode
-}
-
 type TriePage struct {
   Title string
   Rank float64
@@ -63,9 +57,8 @@ func NormalizeSuggestionPrefix(prefix string) string {
   return strings.ToUpper(prefix)
 }
 
-func CreateAndWriteTrie(inputFile string, outputFile string) (err error) {
-  trie := NewTrie()
-
+func CreateTrie(inputFile string) (trie *Trie, err error) {
+  trie = NewTrie()
   rpchan := make(chan *RankedPage, 10000)
   go ReadRankedPages(inputFile, rpchan)
   i := 0
@@ -80,7 +73,7 @@ func CreateAndWriteTrie(inputFile string, outputFile string) (err error) {
     i++
   }
 
-  return
+  return trie, nil
 }
 
 // The remaining is a ranked autocomplete modification of https://github.com/rjohnsondev/go-trie 
@@ -106,16 +99,16 @@ func (this ByRank) Swap(i, j int) {
 }
 
 type branch struct {
-    children []*branch
-    value Rankable
-    shortcut []byte
-    maxRank float64 // maximum rank value below this node
+    Children []*branch
+    Value Rankable
+    Shortcut []byte
+    MaxRank float64 // maximum rank value below this node
 }
 
 type Trie struct {
-    tree *branch
-    unicodeMap map[int] int
-    nextIndex int
+    Tree *branch
+    UnicodeMap map[int] int
+    NextIndex int
 }
 
 
@@ -126,11 +119,11 @@ func (this *Trie) GetKey(ch byte) int {
         // we use it's key..
         index = ir - startLetter
     } else {
-        mapindex, exists := this.unicodeMap[ir]
+        mapindex, exists := this.UnicodeMap[ir]
         if !exists {
-            index = this.nextIndex
-            this.nextIndex++
-            this.unicodeMap[ir] = index
+            index = this.NextIndex
+            this.NextIndex++
+            this.UnicodeMap[ir] = index
         } else {
             index = mapindex
         }
@@ -148,60 +141,60 @@ func (this *Trie) EnsureCapacity(children []*branch, index int) []*branch {
 }
 
 func (this *Trie) AddEntry(entry string, value Rankable) {
-    this.AddToBranch(this.tree, []byte(entry), value)
+    this.AddToBranch(this.Tree, []byte(entry), value)
 }
 
 func (this *Trie) AddToBranch(t *branch, remEntry []byte, value Rankable) {
-    oldRank := t.maxRank
+    oldRank := t.MaxRank
     switch r := value.(type) {
       case Rankable:
-        t.maxRank = math.Max(r.GetRank(), t.maxRank)
+        t.MaxRank = math.Max(r.GetRank(), t.MaxRank)
     }
 
     // can we cheat?
-    if t.shortcut == nil {
-        t.shortcut = remEntry
-        t.value = value
-        t.children = nil // not needed, but it helps think things through
+    if t.Shortcut == nil {
+        t.Shortcut = remEntry
+        t.Value = value
+        t.Children = nil // not needed, but it helps think things through
         return
     }
 
-    shortcut := t.shortcut
+    Shortcut := t.Shortcut
 
     // are we on the right branch yet?
-    if len(remEntry) == 0 && len(shortcut) == 0 {
+    if len(remEntry) == 0 && len(Shortcut) == 0 {
         // we are here, set it and forget it
-        if t.value == nil || value.GetRank() > t.value.GetRank() {
-          t.value = value
+        if t.Value == nil || value.GetRank() > t.Value.GetRank() {
+          t.Value = value
         }
         return
     } else {
 
         // find common prefix
         smallestLen := len(remEntry)
-        if smallestLen > len(shortcut) {
-            smallestLen = len(shortcut)
+        if smallestLen > len(Shortcut) {
+            smallestLen = len(Shortcut)
         }
         var x int
-        for x = 0; x < smallestLen && shortcut[x] == remEntry[x]; x++ {
+        for x = 0; x < smallestLen && Shortcut[x] == remEntry[x]; x++ {
 
         }
-        commonPrefix := shortcut[0:x]
-        if x < len(shortcut) {
+        commonPrefix := Shortcut[0:x]
+        if x < len(Shortcut) {
             // we can assign the t to a child
-            ttail := shortcut[x+1:len(shortcut)]
-            tkey := this.GetKey(shortcut[x])
+            ttail := Shortcut[x+1:len(Shortcut)]
+            tkey := this.GetKey(Shortcut[x])
             newTBranch := &branch {
-                children: t.children,
-                value: t.value,
-                maxRank: oldRank,
-                shortcut: ttail,
+                Children: t.Children,
+                Value: t.Value,
+                MaxRank: oldRank,
+                Shortcut: ttail,
             }
-            t.children = make([]*branch, noLetters, noLetters)
-            t.children = this.EnsureCapacity(t.children, tkey)
-            t.children[tkey] = newTBranch
-            t.shortcut = commonPrefix
-            t.value = nil
+            t.Children = make([]*branch, noLetters, noLetters)
+            t.Children = this.EnsureCapacity(t.Children, tkey)
+            t.Children[tkey] = newTBranch
+            t.Shortcut = commonPrefix
+            t.Value = nil
         } else {
             // the value of t remains
         }
@@ -209,20 +202,20 @@ func (this *Trie) AddToBranch(t *branch, remEntry []byte, value Rankable) {
             // we can assign the v to a child
             vkey := this.GetKey(remEntry[x])
             vtail := remEntry[x+1:len(remEntry)]
-            t.children = this.EnsureCapacity(t.children, vkey)
-            if t.children[vkey] == nil {
+            t.Children = this.EnsureCapacity(t.Children, vkey)
+            if t.Children[vkey] == nil {
                 newVBranch := &branch {
-                    children: nil,
-                    value: nil,
-                    shortcut: nil,
+                    Children: nil,
+                    Value: nil,
+                    Shortcut: nil,
                 }
-                t.children[vkey] = newVBranch
+                t.Children[vkey] = newVBranch
             }
-            this.AddToBranch(t.children[vkey], vtail, value)
+            this.AddToBranch(t.Children[vkey], vtail, value)
         } else {
             // the value of v now takes up the position
-            if t.value == nil || value.GetRank() > t.value.GetRank() {
-              t.value = value
+            if t.Value == nil || value.GetRank() > t.Value.GetRank() {
+              t.Value = value
             }
         }
 
@@ -231,27 +224,27 @@ func (this *Trie) AddToBranch(t *branch, remEntry []byte, value Rankable) {
 
 func (this *Trie) DumpTree() {
     fmt.Printf("\n\n")
-    this.DumpBranch(this.tree, 1)
+    this.DumpBranch(this.Tree, 1)
 }
 
 func (this *Trie) DumpBranch(t *branch, depth int) {
-    // attempt to output a textual view of the tree
+    // attempt to output a textual view of the Tree
     for x := 0; x < depth; x ++ { fmt.Print("  ") }
-    fmt.Printf("- cheat: %s\n", t.shortcut)
+    fmt.Printf("- cheat: %s\n", t.Shortcut)
     for x := 0; x < depth; x ++ { fmt.Print("  ") }
-    fmt.Printf("- value: %s\n",t.value)
+    fmt.Printf("- Value: %s\n",t.Value)
     for x := 0; x < depth; x ++ { fmt.Print("  ") }
-    fmt.Printf("- maxRank: %f\n",t.maxRank)
-    if t.children != nil {
+    fmt.Printf("- MaxRank: %f\n",t.MaxRank)
+    if t.Children != nil {
         for x := 0; x < depth; x ++ { fmt.Print("  ") }
         fmt.Printf("- children:\n")
-        for y := 0; y < len(t.children); y++ {
-            if t.children[y] != nil {
+        for y := 0; y < len(t.Children); y++ {
+            if t.Children[y] != nil {
                 for x := 0; x < depth; x ++ { fmt.Print("  ") }
                 charb := make([]byte, 1)
                 charb[0] = byte(y)+startLetter
                 fmt.Printf(" - %s\n", string(charb))
-                this.DumpBranch(t.children[y], depth+1)
+                this.DumpBranch(t.Children[y], depth+1)
             }
         }
     }
@@ -304,27 +297,28 @@ func (this *Trie) GetTopSuggestions(entry string, n int) ([]Rankable, bool) {
   }
 
   tsq, ok := this.getTopSuggestions(entry, tsq)
-  ret := make([]Rankable, 0, tsq.suggestions.Len())
-  for tsq.suggestions.Len() > 0 {
-    ret = append(ret, *tsq.suggestions.Pop().(*Rankable))
+  nSuggestions := tsq.suggestions.Len()
+  ret := make([]Rankable, nSuggestions)
+  for i := n-1; i >= 0; i-- {
+    ret[i] = *(heap.Pop(tsq.suggestions).(*Rankable))
   }
   return ret, ok
 }
 
 func (this *branch) topValuesBelow(tsq topSuggestionQuery) (topSuggestionQuery) {
-  if this.value != nil {
+  if this.Value != nil {
     if tsq.suggestions.Len() < tsq.n {
-      heap.Push(tsq.suggestions, &this.value)
+      heap.Push(tsq.suggestions, &this.Value)
       tsq.watermark = (*tsq.suggestions.Peek().(*Rankable)).GetRank()
-    } else if tsq.watermark < this.value.GetRank() {
+    } else if tsq.watermark < this.Value.GetRank() {
       heap.Pop(tsq.suggestions)
-      heap.Push(tsq.suggestions, &this.value)
+      heap.Push(tsq.suggestions, &this.Value)
       tsq.watermark = (*tsq.suggestions.Peek().(*Rankable)).GetRank()
     }
   }
 
-  for _, branch := range this.children {
-    if branch != nil && branch.maxRank > tsq.watermark { // Only explore reasonable subtrees
+  for _, branch := range this.Children {
+    if branch != nil && branch.MaxRank > tsq.watermark { // Only explore reasonable subTrees
       tsq = branch.topValuesBelow(tsq)
     }
   }
@@ -333,12 +327,12 @@ func (this *branch) topValuesBelow(tsq topSuggestionQuery) (topSuggestionQuery) 
 }
 
 func (this *Trie) getTopSuggestions(entry string, tsq topSuggestionQuery) (topSuggestionQuery, bool) {
-    t := this.tree
+    t := this.Tree
     eb := []byte(entry)
     // it's <= here to ensure we get to the cheat comparison nil on a valid path
     for x := 0; x <= len(eb); x++ {
         // if the current branch has a cheat, make sure we match it
-        s := t.shortcut
+        s := t.Shortcut
         var y int
         for y = 0; y < len(s); y++ {
             if x+y >= len(eb) {
@@ -361,17 +355,17 @@ func (this *Trie) getTopSuggestions(entry string, tsq topSuggestionQuery) (topSu
             if ir >= startLetter && ir <= endLetter {
                 index = ir - startLetter
             } else {
-                mapindex, exists := this.unicodeMap[ir]
+                mapindex, exists := this.UnicodeMap[ir]
                 if !exists {
                     return tsq, false
                 } else {
                     index = mapindex
                 }
             }
-            if index > len(t.children)-1 || t.children[index] == nil {
+            if index > len(t.Children)-1 || t.Children[index] == nil {
                 return tsq, false
             }
-            t = t.children[index]
+            t = t.Children[index]
             eb = eb[x:]
             x = 0
         }
@@ -381,12 +375,12 @@ func (this *Trie) getTopSuggestions(entry string, tsq topSuggestionQuery) (topSu
 
 
 func (this *Trie) GetEntry(entry string) (value Rankable, validPath bool) {
-    t := this.tree
+    t := this.Tree
     eb := []byte(entry)
     // it's <= here to ensure we get to the cheat comparison nil on a valid path
     for x := 0; x <= len(eb); x++ {
         // if the current branch has a cheat, make sure we match it
-        s := t.shortcut
+        s := t.Shortcut
         var y int
         for y = 0; y < len(s); y++ {
             if x+y >= len(eb) {
@@ -405,33 +399,33 @@ func (this *Trie) GetEntry(entry string) (value Rankable, validPath bool) {
             if ir >= startLetter && ir <= endLetter {
                 index = ir - startLetter
             } else {
-                mapindex, exists := this.unicodeMap[ir]
+                mapindex, exists := this.UnicodeMap[ir]
                 if !exists {
                     return nil, false // no mapping :/
                 } else {
                     index = mapindex
                 }
             }
-            if index > len(t.children)-1 || t.children[index] == nil {
+            if index > len(t.Children)-1 || t.Children[index] == nil {
                 return nil, false
             }
-            t = t.children[index]
+            t = t.Children[index]
             eb = eb[x:]
             x = 0
         }
     }
-    return t.value, true
+    return t.Value, true
 }
 
 func NewTrie() *Trie {
     t := &Trie {
-        tree: &branch {
-            children: nil,
-            value: nil,
-            shortcut: nil,
+        Tree: &branch {
+            Children: nil,
+            Value: nil,
+            Shortcut: nil,
         },
-        unicodeMap: make(map[int]int),
-        nextIndex: 26,
+        UnicodeMap: make(map[int]int),
+        NextIndex: 26,
     }
     return t
 }

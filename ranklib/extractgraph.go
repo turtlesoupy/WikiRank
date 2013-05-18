@@ -113,13 +113,14 @@ func ReadFrom(fileName string, outputName string) (err error) {
   pageInputChan = make(chan *pageElement, 1000)
   pageOutputChan := make(chan *Page, 1000)
   defer close(pageOutputChan)
+  go yieldPageElements(fileName, pageInputChan)
   go WritePages(outputName, numPages, pageOutputChan)
   i := 0
   for page := range pageInputChan {
     pageOutputChan <- newPage(page, titleIdMap)
     i++
     if i % 10000 == 0 {
-      log.Printf("Page #%d", numPages)
+      log.Printf("Page #%d", i)
     }
   }
 

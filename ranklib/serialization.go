@@ -3,6 +3,7 @@ package ranklib
 import (
   "encoding/gob"
   "os"
+  "log"
 )
 
 func ReadLength(fileName string) int {
@@ -42,10 +43,16 @@ func ReadRankedPages(fileName string, cp chan *RankedPage) {
   var length int
   gobDecoder.Decode(&length)
 
-  for i := 0; i < length; i++ {
+  log.Printf("Reading %d ranked pages", length)
+  for i := 0; i < length-1; i++ {
     var page RankedPage
-    gobDecoder.Decode(&page)
-    cp <- &page
+    err := gobDecoder.Decode(&page)
+    if err != nil {
+      log.Printf("Error while reading pages %s", err)
+      break
+    } else{
+      cp <- &page
+    }
   }
 }
 
@@ -58,7 +65,11 @@ func WritePages(fileName string, numPages int, cp chan *Page) {
   gobEncoder.Encode(numPages)
 
   for page := range cp {
-    gobEncoder.Encode(page)
+    if(page != nil) {
+      gobEncoder.Encode(page)
+    } else {
+      log.Printf("Null page while writing pages")
+    }
   }
 }
 
@@ -71,6 +82,10 @@ func WriteRankedPages(fileName string, numPages int, cp chan *RankedPage) {
   gobEncoder.Encode(numPages)
 
   for rp := range cp {
-    gobEncoder.Encode(rp)
+    if rp != nil {
+      gobEncoder.Encode(rp)
+    } else {
+    }
+      log.Printf("Null page while writing ranked pages")
   }
 }
