@@ -31,8 +31,8 @@ import (
   "fmt"
   "log"
   "math"
-  "sort"
   "strings"
+  "container/heap"
 )
 
 type TrieNode struct {
@@ -60,7 +60,7 @@ func newTriePage(rp *RankedPage) *TriePage {
 }
 
 func NormalizeSuggestionPrefix(prefix string) string {
-  return strings.ToLower(prefix)
+  return strings.ToUpper(prefix)
 }
 
 func CreateAndWriteTrie(inputFile string, outputFile string) (err error) {
@@ -72,10 +72,10 @@ func CreateAndWriteTrie(inputFile string, outputFile string) (err error) {
   for page := range rpchan {
     tp := newTriePage(page)
     trie.AddEntry(NormalizeSuggestionPrefix(tp.Title), tp)
-    if i % 10000 == 0 && i > 0 {
+    if i % 100000 == 0 && i > 0 {
       log.Printf("Inserted page #%d", i)
-      sug, _ := trie.GetTopSuggestions("b", 10)
-      log.Printf("Suggestions: %q", sug)
+      sug, _ := trie.GetTopSuggestions("", 10)
+      log.Printf("Suggestions 1: %q", sug)
     }
     i++
   }
@@ -171,7 +171,9 @@ func (this *Trie) AddToBranch(t *branch, remEntry []byte, value Rankable) {
     // are we on the right branch yet?
     if len(remEntry) == 0 && len(shortcut) == 0 {
         // we are here, set it and forget it
-        t.value = value
+        if t.value == nil || value.GetRank() > t.value.GetRank() {
+          t.value = value
+        }
         return
     } else {
 
@@ -219,7 +221,9 @@ func (this *Trie) AddToBranch(t *branch, remEntry []byte, value Rankable) {
             this.AddToBranch(t.children[vkey], vtail, value)
         } else {
             // the value of v now takes up the position
-            t.value = value
+            if t.value == nil || value.GetRank() > t.value.GetRank() {
+              t.value = value
+            }
         }
 
     }
@@ -253,41 +257,74 @@ func (this *Trie) DumpBranch(t *branch, depth int) {
     }
 }
 
-type topSuggestionQuery struct {
-  suggestions []Rankable
-  rankCutoff float64
-  n int
+// A PriorityQueue implements heap.Interface and holds Items.
+type PriorityQueue []*Rankable
+
+func (pq PriorityQueue) Len() int { return len(pq) }
+
+func (pq PriorityQueue) Less(i, j int) bool {
+    return (*pq[i]).GetRank() < (*pq[j]).GetRank()
 }
 
+func (pq PriorityQueue) Swap(i, j int) {
+        pq[i], pq[j] = pq[j], pq[i]
+}
+
+func (pq *PriorityQueue) Push(x interface{}) {
+        item := x.(*Rankable)
+        *pq = append(*pq, item)
+}
+
+func (pq *PriorityQueue) Pop() interface{} {
+        old := *pq
+        n := len(old)
+        item := old[n-1]
+        *pq = old[0 : n-1]
+        return item
+}
+
+func (pq *PriorityQueue) Peek() interface{} {
+  return (*pq)[0]
+}
+
+type topSuggestionQuery struct {
+  suggestions *PriorityQueue
+  n int
+  watermark float64
+}
+
+
 func (this *Trie) GetTopSuggestions(entry string, n int) ([]Rankable, bool) {
+  pq := &PriorityQueue{}
+  heap.Init(pq)
   tsq := topSuggestionQuery {
-    suggestions: make([]Rankable, 0, n+100),
-    rankCutoff: -1,
+    suggestions: pq,
     n: n,
+    watermark: -1,
   }
 
   tsq, ok := this.getTopSuggestions(entry, tsq)
-  s := tsq.suggestions
-  sort.Sort(ByRank(s))
-  if len(s) > n {
-    return s[:n], ok
-  } else {
-    return s, ok
+  ret := make([]Rankable, 0, tsq.suggestions.Len())
+  for tsq.suggestions.Len() > 0 {
+    ret = append(ret, *tsq.suggestions.Pop().(*Rankable))
   }
+  return ret, ok
 }
 
 func (this *branch) topValuesBelow(tsq topSuggestionQuery) (topSuggestionQuery) {
   if this.value != nil {
-    if this.maxRank > tsq.rankCutoff {
-      if len(tsq.suggestions) > tsq.n {
-        tsq.rankCutoff = this.maxRank
-      }
-      tsq.suggestions = append(tsq.suggestions, this.value)
+    if tsq.suggestions.Len() < tsq.n {
+      heap.Push(tsq.suggestions, &this.value)
+      tsq.watermark = (*tsq.suggestions.Peek().(*Rankable)).GetRank()
+    } else if tsq.watermark < this.value.GetRank() {
+      heap.Pop(tsq.suggestions)
+      heap.Push(tsq.suggestions, &this.value)
+      tsq.watermark = (*tsq.suggestions.Peek().(*Rankable)).GetRank()
     }
   }
 
   for _, branch := range this.children {
-    if branch != nil && branch.maxRank > tsq.rankCutoff { // Only explore reasonable subtrees
+    if branch != nil && branch.maxRank > tsq.watermark { // Only explore reasonable subtrees
       tsq = branch.topValuesBelow(tsq)
     }
   }
