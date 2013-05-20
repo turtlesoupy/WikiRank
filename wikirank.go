@@ -3,8 +3,10 @@ package main
 import (
   "log"
   "os"
-  "github.com/cosbynator/wikirank/ranklib"
+  "strconv"
   "runtime"
+  "github.com/cosbynator/wikirank/ranklib"
+  "github.com/cosbynator/wikirank/rankhttp"
 )
 
 func main() {
@@ -16,6 +18,19 @@ func main() {
   }
 
   switch cmd := os.Args[1]; cmd {
+  case "serve":
+    if len(os.Args) != 4 {
+      log.Fatal("Http server requires two arguments, trie location and port")
+      return
+    }
+
+    trieLocation := os.Args[2]
+    port, err := strconv.Atoi(os.Args[3])
+    if err != nil { panic(err) }
+
+    log.Printf("Placeholder: will build trie index from %s", trieLocation)
+    rankhttp.Serve(nil, port)
+
   case "create_trie":
     if len(os.Args) <= 3 {
       log.Fatal("Create Trie: required argument 'ranked_input.gob' / 'trie.gob' missing")
@@ -23,8 +38,8 @@ func main() {
     }
     inputName := os.Args[2]
     outputName := os.Args[3]
-    log.Printf("Creating tie from '%s' into '%s'", inputName, outputName)
-    err := ranklib.CreateAndWriteTrie(inputName, outputName)
+    log.Printf("Creating trie from '%s' into '%s'", inputName, outputName)
+    _, err := ranklib.CreateTrie(inputName)
     if err != nil { panic(err) }
   case "pagerank":
     if len(os.Args) <= 3 {
