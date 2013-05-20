@@ -57,7 +57,7 @@ func NormalizeSuggestionPrefix(prefix string) string {
   return strings.ToUpper(prefix)
 }
 
-func CreateTrie(inputFile string) (trie *Trie, err error) {
+func CreateTrie(inputFile string, limit int) (trie *Trie, err error) {
   trie = NewTrie()
   rpchan := make(chan *RankedPage, 10000)
   go ReadRankedPages(inputFile, rpchan)
@@ -69,6 +69,8 @@ func CreateTrie(inputFile string) (trie *Trie, err error) {
       log.Printf("Inserted page #%d", i)
       sug, _ := trie.GetTopSuggestions("", 10)
       log.Printf("Suggestions 1: %q", sug)
+    } else if i > limit {
+      break
     }
     i++
   }
@@ -299,7 +301,7 @@ func (this *Trie) GetTopSuggestions(entry string, n int) ([]Rankable, bool) {
   tsq, ok := this.getTopSuggestions(entry, tsq)
   nSuggestions := tsq.suggestions.Len()
   ret := make([]Rankable, nSuggestions)
-  for i := n-1; i >= 0; i-- {
+  for i := nSuggestions-1; i >= 0; i-- {
     ret[i] = *(heap.Pop(tsq.suggestions).(*Rankable))
   }
   return ret, ok

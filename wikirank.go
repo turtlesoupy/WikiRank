@@ -3,6 +3,7 @@ package main
 import (
   "log"
   "os"
+  "math"
   "strconv"
   "runtime"
   "github.com/cosbynator/wikirank/ranklib"
@@ -27,9 +28,9 @@ func main() {
     trieLocation := os.Args[2]
     port, err := strconv.Atoi(os.Args[3])
     if err != nil { panic(err) }
-
-    log.Printf("Placeholder: will build trie index from %s", trieLocation)
-    rankhttp.Serve(nil, port)
+    log.Printf("Build trie index from %s", trieLocation)
+    trie, err := ranklib.CreateTrie(trieLocation, 10000)
+    rankhttp.Serve(trie, port)
 
   case "create_trie":
     if len(os.Args) <= 3 {
@@ -39,7 +40,7 @@ func main() {
     inputName := os.Args[2]
     outputName := os.Args[3]
     log.Printf("Creating trie from '%s' into '%s'", inputName, outputName)
-    _, err := ranklib.CreateTrie(inputName)
+    _, err := ranklib.CreateTrie(inputName, math.MaxInt32)
     if err != nil { panic(err) }
   case "pagerank":
     if len(os.Args) <= 3 {

@@ -1,10 +1,14 @@
+"use strict";
+
 $(document).ready(function() {
   $("input.first-object, input.second-object").typeahead({
     name: "objects",
     remote: {
-      url: "/named_entity_suggestions/q?%QUERY",
+      url: "/named_entity_suggestions?q=%QUERY",
       filter: function(parsedResponse) {
-        return parsedResponse.suggestions;
+        var suggestions = _.pluck(parsedResponse.suggestions, "Title")
+        console.log(parsedResponse.suggestions);
+        return suggestions;
       }
     }
   });

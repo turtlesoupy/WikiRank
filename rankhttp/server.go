@@ -37,13 +37,6 @@ func loadTemplate(templateName string) (engine *gohaml.Engine, err error) {
 }
 
 var namedEntityRegex = regexp.MustCompile("/named_entity_suggestions([?].*)?")
-func handleDynamic(w http.ResponseWriter, r *http.Request) {
-  if namedEntityRegex.MatchString(r.URL.Path) {
-    namedEntitySuggestions(w, r)
-  } else {
-    index(w, r)
-  }
-}
 
 func index(w http.ResponseWriter, r *http.Request) {
   var scope = make(map[string]interface{})
@@ -59,9 +52,19 @@ func index(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func namedEntitySuggestions(w http.ResponseWriter, r *http.Request) {
-  suggestions := map[string]interface{} {
-    "suggestions": []string{"United Nations"},
+func namedEntitySuggestions(autocompleteIndex *ranklib.Trie, w http.ResponseWriter, r *http.Request) {
+  suggestions := map[string]interface{}{}
+  search, ok := r.URL.Query()["q"]
+  log.Printf("Search is %s from URL %s", search, r.URL)
+  if !ok || len(search) != 1 {
+    //TODO: something
+    http.Error(w, "Bad search prefix", http.StatusBadRequest)
+    return
+  }
+
+  suggestions["suggestions"], ok = autocompleteIndex.GetTopSuggestions(ranklib.NormalizeSuggestionPrefix(search[0]), 6)
+  if !ok {
+    //TODO: something
   }
 
   responseObject, err := json.Marshal(suggestions)
@@ -92,7 +95,13 @@ func setupStatics(rootStatics []string, exposedStaticDirs []string) {
 
 func Serve(autocompleteIndex *ranklib.Trie, port int) {
   log.Printf("Server: running on port %d", port)
-  http.HandleFunc("/", handleDynamic)
+  http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+    if namedEntityRegex.MatchString(r.URL.Path) {
+      namedEntitySuggestions(autocompleteIndex, w, r)
+    } else {
+      index(w, r)
+    }
+  })
   setupStatics(
     []string{"robots.txt"},
     []string {"css", "js", "img"},
