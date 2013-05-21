@@ -50,9 +50,14 @@ $(document).ready(function() {
       .done(function(data) {
         endSpin();
 
-        var ratio = data.pages[0].Rank / data.pages[1].Rank;
+        var pages = data.pages;
+        var ratio = pages[0].Rank / pages[1].Rank;
+        if(ratio < 1) {
+          ratio = 1/ratio;
+          pages.reverse(); 
+        }
+
         var influenceText, copy;
-        console.log(ratio);
 
         if(ratio >= 0.95 && ratio <= 1.05) {
           influenceText = "about as";
@@ -64,13 +69,13 @@ $(document).ready(function() {
           } else {
             textRatio = Number(ratio.toPrecision(1));
           }
-          influenceText = textRatio + (ratio >= 1.0 ?  "x more" : "x less");
+          influenceText = textRatio + "x more";
           copy = "influential than";
         }
 
-        $(".influencer.influencerFirst").html("<strong>" + data.pages[0].Title + "</strong> is");
+        $(".influencer.influencerFirst").html("<strong>" + pages[0].Title + "</strong> is");
         $(".influenceResultsRatio").text(influenceText);
-        $(".influencer.influencerSecond").html(copy + " <strong>" + data.pages[1].Title + "</strong>");
+        $(".influencer.influencerSecond").html(copy + " <strong>" + pages[1].Title + "</strong>");
         $(".influenceResults").show();
 
       })

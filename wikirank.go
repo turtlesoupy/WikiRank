@@ -29,7 +29,7 @@ func main() {
     port, err := strconv.Atoi(os.Args[3])
     if err != nil { panic(err) }
     log.Printf("Build trie index from %s", trieLocation)
-    trie, err := ranklib.CreateTrie(trieLocation, 10000)
+    trie, err := ranklib.CreateTrie(trieLocation, math.MaxInt32)
     rankhttp.Serve(trie, port)
 
   case "create_trie":
