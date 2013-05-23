@@ -33,10 +33,15 @@ func (s InfluencerList) Swap(i, j int) {
 type RankedPage struct {
   Title string
   Id uint64
+  RedirectToId uint64
   Order uint32
   Rank float32
   OutboundCount uint32
   Influencers []Influencer
+}
+
+func (rp *RankedPage) IsRedirect() bool {
+  return rp.RedirectToId != 0
 }
 
 type RankedPageList []RankedPage
@@ -58,6 +63,11 @@ func computeInfluencers(numInfluencers int, pageList []Page, rankList []RankedPa
   for i := 0; i < n; i++ {
     page := &pageList[i]
     rankedPage := &rankList[i]
+    // Redirects shouldn't be influencers
+    if rankedPage.IsRedirect() {
+      continue
+    }
+
     perLinkContribution := rankedPage.Rank * pageRankWalkProbability  / float32(len(page.Links))
     for _, linkedId := range page.Links {
       linkedRank := &rankList[idRemap[linkedId]]
@@ -116,6 +126,7 @@ func RankAndWrite(inputName string, outputName string, numInfluencers int) (err 
     rankList[i] = RankedPage{
       Title: page.Title,
       Id: page.Id,
+      RedirectToId: page.RedirectToId,
       Rank: float32(rankVector[i]),
       OutboundCount: uint32(len(page.Links)),
       Influencers: make([]Influencer, 0, numInfluencers),
