@@ -29,52 +29,24 @@ package ranklib
 
 import (
   "fmt"
-  "log"
-  "strings"
   "container/heap"
 )
 
-type TriePage struct {
-  Title string
+type TrieValue struct {
+  Id uint64
   Rank float32
 }
 
-func (t*TriePage) GetRank() float32 {
-  return t.Rank
+type ByRank []TrieValue
+
+func (this ByRank) Len() int {
+    return len(this)
 }
-
-
-func newTriePage(rp *RankedPage) *TriePage {
-  t :=  &TriePage {
-    Title: rp.Title,
-    Rank: rp.Rank,
-  }
-  return t
+func (this ByRank) Less(i, j int) bool {
+    return this[i].Rank > this[j].Rank
 }
-
-func NormalizeSuggestionPrefix(prefix string) string {
-  return strings.ToUpper(prefix)
-}
-
-func CreateTrie(inputFile string, limit int) (trie *Trie, err error) {
-  trie = NewTrie()
-  rpchan := make(chan *RankedPage, 10000)
-  go ReadRankedPages(inputFile, rpchan)
-  i := 0
-  for page := range rpchan {
-    tp := newTriePage(page)
-    trie.AddEntry(NormalizeSuggestionPrefix(tp.Title), tp)
-    if i % 100000 == 0 && i > 0 {
-      log.Printf("Inserted page #%d", i)
-      sug, _ := trie.GetTopSuggestions("", 10)
-      log.Printf("Suggestions 1: %q", sug)
-    } else if i > limit {
-      break
-    }
-    i++
-  }
-
-  return trie, nil
+func (this ByRank) Swap(i, j int) {
+    this[i], this[j] = this[j], this[i]
 }
 
 // The remaining is a ranked autocomplete modification of https://github.com/rjohnsondev/go-trie 
@@ -83,25 +55,10 @@ const startLetter = '.'
 const endLetter = 'Z'
 const noLetters= int(endLetter) - int(startLetter) +1 // optimised for english... with a couple left over
 
-type Rankable interface {
-  GetRank() float32
-}
-
-type ByRank []Rankable
-
-func (this ByRank) Len() int {
-    return len(this)
-}
-func (this ByRank) Less(i, j int) bool {
-    return this[i].GetRank() > this[j].GetRank()
-}
-func (this ByRank) Swap(i, j int) {
-    this[i], this[j] = this[j], this[i]
-}
 
 type branch struct {
     Children []*branch
-    Value Rankable
+    Value TrieValue
     Shortcut []byte
     MaxRank float32 // maximum rank value below this node
 }
@@ -141,17 +98,14 @@ func (this *Trie) EnsureCapacity(children []*branch, index int) []*branch {
     return children
 }
 
-func (this *Trie) AddEntry(entry string, value Rankable) {
+func (this *Trie) AddEntry(entry string, value TrieValue) {
     this.AddToBranch(this.Tree, []byte(entry), value)
 }
 
-func (this *Trie) AddToBranch(t *branch, remEntry []byte, value Rankable) {
+func (this *Trie) AddToBranch(t *branch, remEntry []byte, value TrieValue) {
     oldRank := t.MaxRank
-    switch r := value.(type) {
-      case Rankable:
-        if t.MaxRank < r.GetRank() {
-          t.MaxRank = r.GetRank()
-        }
+    if t.MaxRank < value.Rank {
+      t.MaxRank = value.Rank
     }
 
     // can we cheat?
@@ -167,7 +121,7 @@ func (this *Trie) AddToBranch(t *branch, remEntry []byte, value Rankable) {
     // are we on the right branch yet?
     if len(remEntry) == 0 && len(Shortcut) == 0 {
         // we are here, set it and forget it
-        if t.Value == nil || value.GetRank() > t.Value.GetRank() {
+        if t.Value.Id == 0 || value.Rank > t.Value.Rank {
           t.Value = value
         }
         return
@@ -197,7 +151,7 @@ func (this *Trie) AddToBranch(t *branch, remEntry []byte, value Rankable) {
             t.Children = this.EnsureCapacity(t.Children, tkey)
             t.Children[tkey] = newTBranch
             t.Shortcut = commonPrefix
-            t.Value = nil
+            t.Value = TrieValue{}
         } else {
             // the value of t remains
         }
@@ -209,7 +163,7 @@ func (this *Trie) AddToBranch(t *branch, remEntry []byte, value Rankable) {
             if t.Children[vkey] == nil {
                 newVBranch := &branch {
                     Children: nil,
-                    Value: nil,
+                    Value: TrieValue{},
                     Shortcut: nil,
                 }
                 t.Children[vkey] = newVBranch
@@ -217,7 +171,7 @@ func (this *Trie) AddToBranch(t *branch, remEntry []byte, value Rankable) {
             this.AddToBranch(t.Children[vkey], vtail, value)
         } else {
             // the value of v now takes up the position
-            if t.Value == nil || value.GetRank() > t.Value.GetRank() {
+            if t.Value.Id == 0 || value.Rank > t.Value.Rank {
               t.Value = value
             }
         }
@@ -254,29 +208,29 @@ func (this *Trie) DumpBranch(t *branch, depth int) {
 }
 
 // A PriorityQueue implements heap.Interface and holds Items.
-type PriorityQueue []*Rankable
+type PriorityQueue []TrieValue
 
 func (pq PriorityQueue) Len() int { return len(pq) }
 
 func (pq PriorityQueue) Less(i, j int) bool {
-    return (*pq[i]).GetRank() < (*pq[j]).GetRank()
+    return pq[i].Rank < pq[j].Rank
 }
 
 func (pq PriorityQueue) Swap(i, j int) {
-        pq[i], pq[j] = pq[j], pq[i]
+    pq[i], pq[j] = pq[j], pq[i]
 }
 
 func (pq *PriorityQueue) Push(x interface{}) {
-        item := x.(*Rankable)
-        *pq = append(*pq, item)
+    item := x.(TrieValue)
+    *pq = append(*pq, item)
 }
 
 func (pq *PriorityQueue) Pop() interface{} {
-        old := *pq
-        n := len(old)
-        item := old[n-1]
-        *pq = old[0 : n-1]
-        return item
+    old := *pq
+    n := len(old)
+    item := old[n-1]
+    *pq = old[0 : n-1]
+    return item
 }
 
 func (pq *PriorityQueue) Peek() interface{} {
@@ -290,7 +244,7 @@ type topSuggestionQuery struct {
 }
 
 
-func (this *Trie) GetTopSuggestions(entry string, n int) ([]Rankable, bool) {
+func (this *Trie) GetTopSuggestions(entry string, n int) ([]TrieValue, bool) {
   pq := &PriorityQueue{}
   heap.Init(pq)
   tsq := topSuggestionQuery {
@@ -301,22 +255,22 @@ func (this *Trie) GetTopSuggestions(entry string, n int) ([]Rankable, bool) {
 
   tsq, ok := this.getTopSuggestions(entry, tsq)
   nSuggestions := tsq.suggestions.Len()
-  ret := make([]Rankable, nSuggestions)
+  ret := make([]TrieValue, nSuggestions)
   for i := nSuggestions-1; i >= 0; i-- {
-    ret[i] = *(heap.Pop(tsq.suggestions).(*Rankable))
+    ret[i] = heap.Pop(tsq.suggestions).(TrieValue)
   }
   return ret, ok
 }
 
 func (this *branch) topValuesBelow(tsq topSuggestionQuery) (topSuggestionQuery) {
-  if this.Value != nil {
+  if this.Value.Id != 0 {
     if tsq.suggestions.Len() < tsq.n {
-      heap.Push(tsq.suggestions, &this.Value)
-      tsq.watermark = (*tsq.suggestions.Peek().(*Rankable)).GetRank()
-    } else if tsq.watermark < this.Value.GetRank() {
+      heap.Push(tsq.suggestions, this.Value)
+      tsq.watermark = tsq.suggestions.Peek().(TrieValue).Rank
+    } else if tsq.watermark < this.Value.Rank {
       heap.Pop(tsq.suggestions)
-      heap.Push(tsq.suggestions, &this.Value)
-      tsq.watermark = (*tsq.suggestions.Peek().(*Rankable)).GetRank()
+      heap.Push(tsq.suggestions, this.Value)
+      tsq.watermark = tsq.suggestions.Peek().(TrieValue).Rank
     }
   }
 
@@ -377,7 +331,7 @@ func (this *Trie) getTopSuggestions(entry string, tsq topSuggestionQuery) (topSu
 }
 
 
-func (this *Trie) GetEntry(entry string) (value Rankable, validPath bool) {
+func (this *Trie) GetEntry(entry string) (value TrieValue, validPath bool) {
     t := this.Tree
     eb := []byte(entry)
     // it's <= here to ensure we get to the cheat comparison nil on a valid path
@@ -387,10 +341,10 @@ func (this *Trie) GetEntry(entry string) (value Rankable, validPath bool) {
         var y int
         for y = 0; y < len(s); y++ {
             if x+y >= len(eb) {
-                return nil, true
+                return TrieValue{}, false
             }
             if s[y] != eb[x+y] {
-                return nil, false
+                return TrieValue{}, false
             }
         }
         x += y
@@ -404,13 +358,13 @@ func (this *Trie) GetEntry(entry string) (value Rankable, validPath bool) {
             } else {
                 mapindex, exists := this.UnicodeMap[ir]
                 if !exists {
-                    return nil, false // no mapping :/
+                    return TrieValue{}, false // no mapping :/
                 } else {
                     index = mapindex
                 }
             }
             if index > len(t.Children)-1 || t.Children[index] == nil {
-                return nil, false
+                return TrieValue{}, false
             }
             t = t.Children[index]
             eb = eb[x:]
@@ -424,7 +378,6 @@ func NewTrie() *Trie {
     t := &Trie {
         Tree: &branch {
             Children: nil,
-            Value: nil,
             Shortcut: nil,
         },
         UnicodeMap: make(map[int]int),

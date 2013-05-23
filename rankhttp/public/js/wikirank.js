@@ -23,7 +23,6 @@ $(document).ready(function() {
       url: "/named_entity_suggestions?q=%QUERY",
       filter: function(parsedResponse) {
         var suggestions = _.pluck(parsedResponse.suggestions, "Title")
-        console.log(parsedResponse.suggestions);
         return suggestions;
       }
     }
@@ -50,11 +49,22 @@ $(document).ready(function() {
       .done(function(data) {
         endSpin();
 
+        function makeInfluenceResults(page) {
+          return "<strong>" + page.Page.Title + "</strong> is most influenced by " + _.map(page.Influencers, function(i) {
+            return i.Page.Title;
+          }).join(",");
+        }
+
         var pages = data.pages;
-        var ratio = pages[0].Rank / pages[1].Rank;
+        console.log(pages);
+        var page1 = pages[0];
+        var page2 = pages[1];
+        var ratio = page1.Page.Rank / page2.Page.Rank;
         if(ratio < 1) {
           ratio = 1/ratio;
-          pages.reverse(); 
+          var tmp = page1;
+          page1 = page2;
+          page2 = tmp;
         }
 
         var influenceText, copy;
@@ -73,9 +83,11 @@ $(document).ready(function() {
           copy = "influential than";
         }
 
-        $(".influencer.influencerFirst").html("<strong>" + pages[0].Title + "</strong> is");
+        $(".influencer.influencerFirst").html("<strong>" + page1.Page.Title + "</strong> is");
         $(".influenceResultsRatio").text(influenceText);
-        $(".influencer.influencerSecond").html(copy + " <strong>" + pages[1].Title + "</strong>");
+        $(".influencer.influencerSecond").html(copy + " <strong>" + page2.Page.Title + "</strong>");
+        $(".influence1Stats").html(makeInfluenceResults(page1));
+        $(".influence2Stats").html(makeInfluenceResults(page2));
         $(".influenceResults").show();
 
       })

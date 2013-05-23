@@ -20,28 +20,27 @@ func main() {
 
   switch cmd := os.Args[1]; cmd {
   case "serve":
-    if len(os.Args) != 4 {
+    if len(os.Args) < 4 {
       log.Fatal("Http server requires two arguments, trie location and port")
       return
+    }
+
+    limit := math.MaxInt32
+    if len(os.Args) > 4 {
+      var err error
+      limit, err = strconv.Atoi(os.Args[4])
+      if err != nil { panic(err) }
+      log.Printf("Page limit is %d", limit)
     }
 
     trieLocation := os.Args[2]
     port, err := strconv.Atoi(os.Args[3])
     if err != nil { panic(err) }
-    log.Printf("Build trie index from %s", trieLocation)
-    trie, err := ranklib.CreateTrie(trieLocation, math.MaxInt32)
-    rankhttp.Serve(trie, port)
-
-  case "create_trie":
-    if len(os.Args) <= 3 {
-      log.Fatal("Create Trie: required argument 'ranked_input.gob' / 'trie.gob' missing")
-      return
-    }
-    inputName := os.Args[2]
-    outputName := os.Args[3]
-    log.Printf("Creating trie from '%s' into '%s'", inputName, outputName)
-    _, err := ranklib.CreateTrie(inputName, math.MaxInt32)
+    log.Printf("Building resolver from %s", trieLocation)
+    pageResolver, err := ranklib.CreatePageResolver(trieLocation, limit)
     if err != nil { panic(err) }
+
+    rankhttp.Serve(pageResolver, port)
   case "pagerank":
     if len(os.Args) <= 3 {
       log.Fatal("PageRank: Required argument 'input.gob' / 'ranked_output.gob' missing")

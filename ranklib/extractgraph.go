@@ -12,7 +12,7 @@ import (
 var titleFilter = regexp.MustCompile("^(File|Talk|Special|Wikipedia|Wiktionary|User|User Talk|Category|Portal):")
 
 type redirect struct {
-  Title string `xml:"title, attr"`
+  Title string `xml:"title,attr"`
 }
 
 type pageElement struct {

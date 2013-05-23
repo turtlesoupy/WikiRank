@@ -20,6 +20,33 @@ const (
   templateDir = "/home/tdimson/go/src/github.com/cosbynator/wikirank/rankhttp/templates"
 )
 
+type RankedPageWithInfluencers struct {
+  Page ranklib.RankedPage
+  Influencers []RankedPageInfluencer
+}
+
+type RankedPageInfluencer struct {
+  Page ranklib.RankedPage
+  Influence float32
+}
+
+func fetchPageWithInfluencers(title string, pageResolver *ranklib.PageResolver) (*RankedPageWithInfluencers, bool) {
+  page, ok := pageResolver.PageByTitle(title)
+  if !ok { return nil, false }
+
+  influencers := make([]RankedPageInfluencer, 0, len(page.Influencers))
+  for _, influencer := range page.Influencers {
+    if iPage, iOk := pageResolver.PageById(influencer.Id); iOk {
+      influencers = append(influencers, RankedPageInfluencer{Page: *iPage, Influence: influencer.Influence})
+    }
+  }
+
+  return &RankedPageWithInfluencers{
+    Page: *page,
+    Influencers: influencers,
+  }, true
+}
+
 func loadTemplate(templateName string) (engine *gohaml.Engine, err error) {
   templateLocation := fmt.Sprintf("%s/%s", templateDir, templateName)
   f, err := os.Open(templateLocation)
@@ -50,7 +77,7 @@ func index(w http.ResponseWriter, r *http.Request) {
   fmt.Fprintf(w, response)
 }
 
-func compareThings(autocompleteIndex *ranklib.Trie, w http.ResponseWriter, r *http.Request) {
+func compareThings(pageResolver *ranklib.PageResolver, w http.ResponseWriter, r *http.Request) {
   things, ok := r.URL.Query()["things[]"]
   if !ok || len(things) != 2 {
     http.Error(w, "Bad search", http.StatusBadRequest)
@@ -59,13 +86,13 @@ func compareThings(autocompleteIndex *ranklib.Trie, w http.ResponseWriter, r *ht
   log.Printf("Comparing %q", things)
 
 
-  page1, ok := autocompleteIndex.GetEntry(ranklib.NormalizeSuggestionPrefix(things[0]))
+  page1, ok := fetchPageWithInfluencers(things[0], pageResolver)
   if !ok {
     http.Error(w, fmt.Sprintf("%s doesn't exist", things[0]), http.StatusBadRequest)
     return
   }
 
-  page2, ok := autocompleteIndex.GetEntry(ranklib.NormalizeSuggestionPrefix(things[1]))
+  page2, ok := fetchPageWithInfluencers(things[1], pageResolver)
   if !ok {
     http.Error(w, fmt.Sprintf("%s doesn't exist", things[1]), http.StatusBadRequest)
     return
@@ -86,7 +113,7 @@ func compareThings(autocompleteIndex *ranklib.Trie, w http.ResponseWriter, r *ht
   fmt.Fprintf(w, response)
 }
 
-func namedEntitySuggestions(autocompleteIndex *ranklib.Trie, w http.ResponseWriter, r *http.Request) {
+func namedEntitySuggestions(pageResolver *ranklib.PageResolver, w http.ResponseWriter, r *http.Request) {
   suggestions := map[string]interface{}{}
   search, ok := r.URL.Query()["q"]
   log.Printf("Search is %s from URL %s", search, r.URL)
@@ -95,11 +122,7 @@ func namedEntitySuggestions(autocompleteIndex *ranklib.Trie, w http.ResponseWrit
     return
   }
 
-  suggestions["suggestions"], ok = autocompleteIndex.GetTopSuggestions(ranklib.NormalizeSuggestionPrefix(search[0]), 6)
-  if !ok {
-    http.Error(w, "Bad trie traversal", http.StatusInternalServerError)
-    return
-  }
+  suggestions["suggestions"] = pageResolver.PrefixSuggestions(search[0], 10)
 
   responseObject, err := json.Marshal(suggestions)
   if err != nil {
@@ -130,13 +153,13 @@ func setupStatics(rootStatics []string, exposedStaticDirs []string) {
 
 var namedEntityRegex = regexp.MustCompile("/named_entity_suggestions([?].*)?")
 var compareRegex = regexp.MustCompile("/compare([?].*)?")
-func Serve(autocompleteIndex *ranklib.Trie, port int) {
+func Serve(pageResolver *ranklib.PageResolver, port int) {
   log.Printf("Server: running on port %d", port)
   http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
     if namedEntityRegex.MatchString(r.URL.Path) {
-      namedEntitySuggestions(autocompleteIndex, w, r)
+      namedEntitySuggestions(pageResolver, w, r)
     } else if compareRegex.MatchString(r.URL.Path) {
-      compareThings(autocompleteIndex, w, r)
+      compareThings(pageResolver, w, r)
     } else {
       index(w, r)
     }
