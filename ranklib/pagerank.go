@@ -5,13 +5,8 @@ import (
   "log"
 )
 
-type RankedPage struct {
-  Page Page
-  Rank float64
-}
-
-func pageRank(pages []RankedPage, teleportProbability float64, convergenceCriteron float64) {
-  beta, epsilon := teleportProbability, convergenceCriteron
+func pageRank(pages []Page, walkProbability float64, convergenceCriteron float64) ([]float64, map[uint64] uint32) {
+  beta, epsilon := walkProbability, convergenceCriteron
   log.Printf("Ranking with beta='%f', epsilon='%f'", beta, epsilon)
   n := len(pages)
   idRemap := make(map[uint64] uint32, n)
@@ -19,7 +14,7 @@ func pageRank(pages []RankedPage, teleportProbability float64, convergenceCriter
   thisRank := make([]float64, n)
 
   for i := 0; i < n; i++ {
-    idRemap[pages[i].Page.Id] = uint32(i)
+    idRemap[pages[i].Id] = uint32(i)
   }
 
   for iteration, lastChange := 1, math.MaxFloat64; lastChange > epsilon; iteration++ {
@@ -38,8 +33,8 @@ func pageRank(pages []RankedPage, teleportProbability float64, convergenceCriter
 
     // Single power iteration
     for i := 0; i < n; i++ {
-      contribution := beta * lastRank[i] / float64(len(pages[i].Page.Links))
-      for _, outboundId := range pages[i].Page.Links {
+      contribution := beta * lastRank[i] / float64(len(pages[i].Links))
+      for _, outboundId := range pages[i].Links {
         thisRank[idRemap[outboundId]] += contribution
       }
     }
@@ -59,38 +54,5 @@ func pageRank(pages []RankedPage, teleportProbability float64, convergenceCriter
     log.Printf("Pagerank iteration #%d delta=%f", iteration, lastChange)
   }
 
-  for i := 0; i < n; i++ {
-    pages[i].Rank = thisRank[i]
-  }
+  return thisRank, idRemap
 }
-
-func RankAndWrite(inputName string, outputName string) (err error) {
-  n := ReadLength(inputName)
-
-  rankList := make([]RankedPage, n)
-  log.Printf("Write Ranked Results: %d pages", n)
-  inputChan := make(chan *Page, 100)
-  go ReadPages(inputName, inputChan)
-
-  log.Printf("Reading pages...")
-  i := 0
-  for page := range inputChan {
-    rankList[i].Page = *page
-    rankList[i].Rank = 0.0
-    i++
-  }
-
-  log.Printf("Computing PageRank...")
-  pageRank(rankList, 0.85, 0.001)
-
-  log.Printf("Writing ranked pages...")
-  outputChan := make(chan *RankedPage, 100)
-  defer close(outputChan)
-  go WriteRankedPages(outputName, n, outputChan)
-  for i := 0; i < n; i++ {
-    outputChan <- &(rankList[i])
-  }
-
-  return
-}
-

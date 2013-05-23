@@ -30,24 +30,23 @@ package ranklib
 import (
   "fmt"
   "log"
-  "math"
   "strings"
   "container/heap"
 )
 
 type TriePage struct {
   Title string
-  Rank float64
+  Rank float32
 }
 
-func (t*TriePage) GetRank() float64 {
+func (t*TriePage) GetRank() float32 {
   return t.Rank
 }
 
 
 func newTriePage(rp *RankedPage) *TriePage {
   t :=  &TriePage {
-    Title: rp.Page.Title,
+    Title: rp.Title,
     Rank: rp.Rank,
   }
   return t
@@ -85,7 +84,7 @@ const endLetter = 'Z'
 const noLetters= int(endLetter) - int(startLetter) +1 // optimised for english... with a couple left over
 
 type Rankable interface {
-  GetRank() float64
+  GetRank() float32
 }
 
 type ByRank []Rankable
@@ -104,7 +103,7 @@ type branch struct {
     Children []*branch
     Value Rankable
     Shortcut []byte
-    MaxRank float64 // maximum rank value below this node
+    MaxRank float32 // maximum rank value below this node
 }
 
 type Trie struct {
@@ -150,7 +149,9 @@ func (this *Trie) AddToBranch(t *branch, remEntry []byte, value Rankable) {
     oldRank := t.MaxRank
     switch r := value.(type) {
       case Rankable:
-        t.MaxRank = math.Max(r.GetRank(), t.MaxRank)
+        if t.MaxRank < r.GetRank() {
+          t.MaxRank = r.GetRank()
+        }
     }
 
     // can we cheat?
@@ -285,7 +286,7 @@ func (pq *PriorityQueue) Peek() interface{} {
 type topSuggestionQuery struct {
   suggestions *PriorityQueue
   n int
-  watermark float64
+  watermark float32
 }
 
 

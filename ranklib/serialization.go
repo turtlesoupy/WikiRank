@@ -28,7 +28,10 @@ func ReadPages(fileName string, cp chan *Page) {
 
   for i := 0; i < length; i++ {
     var page Page
-    gobDecoder.Decode(&page)
+    err := gobDecoder.Decode(&page)
+    if err != nil {
+      panic(err)
+    }
     cp <- &page
   }
 }
@@ -48,15 +51,14 @@ func ReadRankedPages(fileName string, cp chan *RankedPage) {
     var page RankedPage
     err := gobDecoder.Decode(&page)
     if err != nil {
-      log.Printf("Error while reading pages %s", err)
-      break
+      panic(err)
     } else{
       cp <- &page
     }
   }
 }
 
-func WritePages(fileName string, numPages int, cp chan *Page) {
+func WritePages(fileName string, numPages int, cp chan *Page, done chan bool) {
   outputFile, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0600)
   if err != nil { panic(err) }
   defer outputFile.Close()
@@ -71,9 +73,10 @@ func WritePages(fileName string, numPages int, cp chan *Page) {
       log.Printf("Null page while writing pages")
     }
   }
+  done <- true
 }
 
-func WriteRankedPages(fileName string, numPages int, cp chan *RankedPage) {
+func WriteRankedPages(fileName string, numPages int, cp chan *RankedPage, done chan bool) {
   outputFile, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0600)
   if err != nil { panic(err) }
   defer outputFile.Close()
@@ -85,7 +88,8 @@ func WriteRankedPages(fileName string, numPages int, cp chan *RankedPage) {
     if rp != nil {
       gobEncoder.Encode(rp)
     } else {
-    }
       log.Printf("Null page while writing ranked pages")
+    }
   }
+  done <- true
 }

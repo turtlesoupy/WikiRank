@@ -25,7 +25,12 @@ type pageElement struct {
 type Page struct {
   Title string
   Id uint64
+  RedirectToId uint64
   Links []uint64
+}
+
+func (page *Page) IsRedirect() bool {
+  return page.RedirectToId != 0
 }
 
 func (p *pageElement) String() string {
@@ -72,7 +77,12 @@ func yieldPageElements(fileName string, cp chan *pageElement) {
 var linkRegex = regexp.MustCompile(`\[\[(?:([^|\]]*)\|)?([^\]]+)\]\]`)
 var cleanSectionRegex = regexp.MustCompile(`^[^#]*`)
 func newPage(pe *pageElement, titleIdMap map[string]uint64) *Page {
-  p := Page{Title: pe.Title, Id: pe.Id}
+  p := Page{Title: pe.Title, Id: pe.Id, RedirectToId: 0}
+  if len(pe.Redirect.Title) > 0 {
+    if redirectId, ok := titleIdMap[cleanSectionRegex.FindString(pe.Redirect.Title)]; ok {
+      p.RedirectToId = redirectId
+    }
+  }
   submatches := linkRegex.FindAllStringSubmatch(pe.Text, -1)
   p.Links = make([]uint64, 0, len(submatches))
   for _, submatch := range submatches {
@@ -112,9 +122,9 @@ func ReadFrom(fileName string, outputName string) (err error) {
 
   pageInputChan = make(chan *pageElement, 1000)
   pageOutputChan := make(chan *Page, 1000)
-  defer close(pageOutputChan)
+  writeDoneChan := make(chan bool)
   go yieldPageElements(fileName, pageInputChan)
-  go WritePages(outputName, numPages, pageOutputChan)
+  go WritePages(outputName, numPages, pageOutputChan, writeDoneChan)
   i := 0
   for page := range pageInputChan {
     pageOutputChan <- newPage(page, titleIdMap)
@@ -123,6 +133,8 @@ func ReadFrom(fileName string, outputName string) (err error) {
       log.Printf("Page #%d", i)
     }
   }
+  close(pageOutputChan)
+  <-writeDoneChan
 
   log.Printf("Done write pass")
 
