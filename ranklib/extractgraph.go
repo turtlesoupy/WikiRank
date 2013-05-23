@@ -83,6 +83,8 @@ func newPage(pe *pageElement, titleIdMap map[string]uint64) *Page {
       p.RedirectToId = redirectId
     }
   }
+
+  dedupeLinks := make(map[uint64] bool)
   submatches := linkRegex.FindAllStringSubmatch(pe.Text, -1)
   p.Links = make([]uint64, 0, len(submatches))
   for _, submatch := range submatches {
@@ -92,8 +94,11 @@ func newPage(pe *pageElement, titleIdMap map[string]uint64) *Page {
     } else {
       dirtyLinkName = cleanSectionRegex.FindString(submatch[1])
     }
-    if linkId, ok := titleIdMap[dirtyLinkName]; ok {
-      p.Links = append(p.Links, linkId)
+    if linkId, ok := titleIdMap[dirtyLinkName]; ok && linkId != p.Id {
+      if _, alreadySeen := dedupeLinks[linkId]; !alreadySeen {
+        dedupeLinks[linkId] = true
+        p.Links = append(p.Links, linkId)
+      }
     }
   }
 
