@@ -37,6 +37,10 @@ type TrieValue struct {
   Rank float32
 }
 
+func (this TrieValue) String() string {
+  return fmt.Sprintf("TrieValue[id=%d, rank=%f]", this.Id, this.Rank)
+}
+
 type ByRank []TrieValue
 
 func (this ByRank) Len() int {

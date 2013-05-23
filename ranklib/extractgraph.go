@@ -9,7 +9,7 @@ import (
   "io"
 )
 
-var titleFilter = regexp.MustCompile("^(File|Talk|Special|Wikipedia|Wiktionary|User|User Talk|Category|Portal):")
+var titleFilter = regexp.MustCompile("^(File|Talk|Special|Wikipedia|Wiktionary|User|User Talk|Category|Portal|Template|Mediawiki):")
 
 type redirect struct {
   Title string `xml:"title,attr"`
