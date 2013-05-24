@@ -55,7 +55,7 @@ func (this ByRank) Swap(i, j int) {
 
 // The remaining is a ranked autocomplete modification of https://github.com/rjohnsondev/go-trie 
 
-const startLetter = '.'
+const startLetter = 'A'
 const endLetter = 'Z'
 const noLetters= int(endLetter) - int(startLetter) +1 // optimised for english... with a couple left over
 
@@ -151,7 +151,7 @@ func (this *Trie) AddToBranch(t *branch, remEntry []byte, value TrieValue) {
                 MaxRank: oldRank,
                 Shortcut: ttail,
             }
-            t.Children = make([]*branch, noLetters, noLetters)
+            t.Children = make([]*branch, 0, 0)
             t.Children = this.EnsureCapacity(t.Children, tkey)
             t.Children[tkey] = newTBranch
             t.Shortcut = commonPrefix
