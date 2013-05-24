@@ -1,5 +1,39 @@
 "use strict";
 
+var viewHelpers = {
+  linkWiki: function(title) {
+    return "<a class='wikilink' href='http://en.wikipedia.org/wiki/" + _.escape(title) + "'>" + _.escape(title) +  "</a>";
+  },
+  percentInfluence: function(influence, totalRank) {
+    return (influence / totalRank).toPrecision(2) + "%";
+  }
+};
+
+var resultStringTemplate = _.template(
+    "<div><strong><%= linkWiki(firstTitle) %></strong> is</div>" +
+    "<div class='ratio'><%= ratioString %></div>" +
+    "<div><%= influenceCopy %> <strong><%= linkWiki(secondTitle) %></strong></div>"
+);
+
+var resultTableTemplate = _.template(
+    "<h4><%=page.Title%></h4>" +
+    "<p class='muted'>Ranked <%=page.Order%> overall</p>" +
+    "<table class='table table-striped'>" +
+    "<thead>" +
+      "<tr>" +
+      "<th>Influencer</th><th>Influence</th>" +
+      "</tr>" +
+    "</thead>" +
+    "<tbody>" +
+      "<% _.each(influencers, function(influencer) { %>" + 
+        "<tr>" +
+          "<td><%=console.log(influencer)%><%=linkWiki(influencer.Page.Title)%></td><td><%=percentInfluence(influencer.Influence, page.Rank)%></td>" +
+        "</tr>" +
+      "<% }); %>" +
+    "</tbody>" +
+    "</table>"
+);
+
 $(document).ready(function() {
   var spinner = new Spinner({
     lines: 15,
@@ -43,7 +77,7 @@ $(document).ready(function() {
 
     startSpin();
     $(".influenceResults").hide();
-    $.getJSON("/compare", {
+    $.getJSON("/things", {
       "things": things
     })
       .done(function(data) {
@@ -55,7 +89,7 @@ $(document).ready(function() {
           }).join(",");
         }
 
-        var pages = data.pages;
+        var pages = data;
         console.log(pages);
         var page1 = pages[0];
         var page2 = pages[1];
@@ -83,12 +117,24 @@ $(document).ready(function() {
           copy = "influential than";
         }
 
-        $(".influencer.influencerFirst").html("<strong>" + page1.Page.Title + "</strong> is");
-        $(".influenceResultsRatio").text(influenceText);
-        $(".influencer.influencerSecond").html(copy + " <strong>" + page2.Page.Title + "</strong>");
-        $(".influence1Stats").html(makeInfluenceResults(page1));
-        $(".influence2Stats").html(makeInfluenceResults(page2));
-        $(".influenceResults").show();
+        $(".machine-results .result-string").html(resultStringTemplate(_.extend({
+          firstTitle: page1.Page.Title,
+          secondTitle: page2.Page.Title,
+          ratioString: influenceText, 
+          influenceCopy: copy
+        }, viewHelpers)));
+
+        _.each(pages, function(page, i) {
+          var n = ".machine-results .result-table" + (i == 0 ? "-first" : "-second");
+          console.log(n);
+          $(".machine-results .result-table" + (i == 0 ? "-first" : "-second")).html(resultTableTemplate(_.extend({
+            page: page.Page,
+            influencers: page.Influencers
+          }, viewHelpers)));
+        });
+
+
+        $(".machine-results").show();
 
       })
       .fail(function(xhr, textStatus, errorThrown) {

@@ -11,6 +11,7 @@ import (
   "strconv"
   "net/http"
   "encoding/json"
+  "html/template"
   "github.com/cosbynator/wikirank/ranklib"
   "github.com/realistschuckle/gohaml"
 )
@@ -65,45 +66,36 @@ func loadTemplate(templateName string) (engine *gohaml.Engine, err error) {
 
 
 func index(w http.ResponseWriter, r *http.Request) {
-  var scope = make(map[string]interface{})
-  engine, err := loadTemplate("index.haml")
+  t, err := template.ParseFiles(fmt.Sprintf("%s/index.gotemplate.html", templateDir))
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
   }
 
-  response := engine.Render(scope)
-  w.Header().Set("Content-Length", strconv.Itoa(len(response)))
-  w.Header().Set("Content-Type", "text/html; charset=utf-8")
-  fmt.Fprintf(w, response)
+  var i interface{}
+  t.Execute(w, i)
 }
 
-func compareThings(pageResolver *ranklib.PageResolver, w http.ResponseWriter, r *http.Request) {
+func things(pageResolver *ranklib.PageResolver, w http.ResponseWriter, r *http.Request) {
   things, ok := r.URL.Query()["things[]"]
   if !ok || len(things) != 2 {
     http.Error(w, "Bad search", http.StatusBadRequest)
     return
   }
-  log.Printf("Comparing %q", things)
 
-
-  page1, ok := fetchPageWithInfluencers(things[0], pageResolver)
-  if !ok {
-    http.Error(w, fmt.Sprintf("%s doesn't exist", things[0]), http.StatusBadRequest)
-    return
+  ret := make([]interface{}, 0, len(things))
+  for _, name := range things {
+    page, ok := fetchPageWithInfluencers(name, pageResolver)
+    if !ok {
+      http.Error(w, fmt.Sprintf("%s doesn't exist", name), http.StatusBadRequest)
+      return
+    }
+    ret = append(ret, page)
   }
 
-  page2, ok := fetchPageWithInfluencers(things[1], pageResolver)
-  if !ok {
-    http.Error(w, fmt.Sprintf("%s doesn't exist", things[1]), http.StatusBadRequest)
-    return
-  }
-
-  responseObject, err := json.Marshal(map[string]interface{}{
-    "pages": []interface{}{page1, page2},
-  })
+  responseObject, err := json.Marshal(ret)
 
   if err != nil {
-    http.Error(w, "Unable to jsonify comparison", http.StatusInternalServerError)
+    http.Error(w, "Unable to jsonify all things", http.StatusInternalServerError)
     return
   }
 
@@ -152,14 +144,15 @@ func setupStatics(rootStatics []string, exposedStaticDirs []string) {
 }
 
 var namedEntityRegex = regexp.MustCompile("/named_entity_suggestions([?].*)?")
-var compareRegex = regexp.MustCompile("/compare([?].*)?")
+var compareRegex = regexp.MustCompile("/things/?([?].*)?")
 func Serve(pageResolver *ranklib.PageResolver, port int) {
   log.Printf("Server: running on port %d", port)
   http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+    log.Printf("Request: %s", r.URL)
     if namedEntityRegex.MatchString(r.URL.Path) {
       namedEntitySuggestions(pageResolver, w, r)
     } else if compareRegex.MatchString(r.URL.Path) {
-      compareThings(pageResolver, w, r)
+      things(pageResolver, w, r)
     } else {
       index(w, r)
     }

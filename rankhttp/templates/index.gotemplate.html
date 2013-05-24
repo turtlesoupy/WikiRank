@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title> The Importance Machine </title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/wikirank.css" rel="stylesheet">
+  </head>
+
+  <body>
+    <a href="https://github.com/cosbynator/wikirank"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+
+    <div class="container">
+
+      <div class="jumbotron">
+        <h1>The Importance Machine</h1>
+        <p class="lead">
+          Data analysis on Wikipedia that quantifies
+          the <em>influence</em> of just about anything.
+        </p>
+        <a class="btn btn-large btn-success" href="#machine">Start Comparing</a>
+      </div>
+      <hr>
+
+      <div class="row-fluid">
+        <a name="machine"></a>
+        <h2> Enter Two things <small> Try anything, like Steve Jobs and Bill Gates</h2>
+      </div>
+      <div class="row-fluid">
+        <div class="span5">
+          <input class="influence-picker first-object" type="text" placeholder="Thing One"> 
+        </div>
+        <div class="span2 versus">
+          Vs.
+        </div>
+        <div class="span5">
+          <input class="influence-picker second-object" type="text" placeholder="Thing One"> 
+        </div>
+      </div>
+
+      <section class="machine-results">
+        <div class="row-fluid result-string">
+        </div>
+        <hr>
+        <div class="row-fluid result-table">
+          <div class="span6 result-table-first">
+          </div>
+          <div class="span6 result-table-second">
+          </div>
+        </div>
+      </section>
+
+      <hr>
+      <footer>
+        <p> &copy 2013 <a href="http://www.thomasdimson.com">Thomas Dimson</a> </p>
+      </footer>
+    </div>
+
+    <script src="http://code.jquery.com/jquery.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/typeahead.min.js"></script>
+    <script src="js/underscore-min.js"></script>
+    <script src="js/spin.min.js"></script>
+    <script src="js/wikirank.js"></script>
+  </body>
+</html>
