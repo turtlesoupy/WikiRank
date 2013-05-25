@@ -39,8 +39,11 @@ func main() {
     log.Printf("Building resolver from %s", trieLocation)
     pageResolver, err := ranklib.CreatePageResolver(trieLocation, limit)
     if err != nil { panic(err) }
+    err = pageResolver.AddCategoryFromFile("Universities", "/home/tdimson/go/src/github.com/cosbynator/wikirank/data/list_of_world_universities.txt")
+    if err != nil { panic(err) }
 
     rankhttp.Serve(pageResolver, port)
+
   case "pagerank":
     if len(os.Args) <= 3 {
       log.Fatal("PageRank: Required argument 'input.gob' / 'ranked_output.gob' missing")
