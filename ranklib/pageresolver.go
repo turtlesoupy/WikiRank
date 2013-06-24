@@ -1,21 +1,88 @@
 package ranklib
 
 import (
-  "io"
   "os"
+  "io"
   "log"
+  "fmt"
+  "sort"
   "bufio"
-  "runtime"
   "strings"
+  "runtime"
+  "encoding/json"
+  "io/ioutil"
 )
 
 const (
   maxRedirects = 100
 )
 
+type CategoryResolver struct {
+  CategoryName string
+  PageResolver *PageResolver
+}
+
 type PageResolver struct {
   trie *Trie
-  pages map[uint64] RankedPage
+  pages []RankedPage
+  categoryResolvers []CategoryResolver
+}
+
+func reindexPages(pageMap map[uint64] *RankedPage, reindexMap map[uint64] int, allowDanglingRedirects bool) {
+  toDelete := make([]uint64, 0)
+  // Non-redirects
+  for _, page := range pageMap {
+    if page.IsRedirect() {
+      continue // Handle after
+    }
+    id := page.Id
+
+    page.Id = uint64(reindexMap[id])
+    for j := range page.Influencers {
+      page.Influencers[j].Id = uint64(reindexMap[page.Influencers[j].Id])
+    }
+  }
+
+  //Redirects
+  for _, page := range pageMap {
+    if !page.IsRedirect() {
+      continue // Handled before
+    }
+
+    p := page
+    redirectCount := 0
+    for p.IsRedirect() && redirectCount < maxRedirects {
+      var ok bool
+      p, ok = pageMap[p.RedirectToId]
+      if !ok {
+        if allowDanglingRedirects {
+          redirectCount = maxRedirects
+          break
+        } else {
+          panic("We got a non-okay redirect")
+        }
+      }
+      redirectCount++
+    }
+
+    if p == nil {
+      toDelete = append(toDelete, page.Id)
+      continue
+    } else if redirectCount == maxRedirects {
+      toDelete = append(toDelete, page.Id)
+      log.Printf("Infinite redirect loop for %s", page)
+      continue;
+    }
+
+    page.Id = uint64(p.Id) // Already reindexed
+    for j := range page.Influencers {
+      page.Influencers[j].Id = uint64(reindexMap[page.Influencers[j].Id])
+    }
+  }
+
+  for _, id := range toDelete {
+    delete(pageMap, id)
+  }
 }
 
 func CreatePageResolver(inputFile string, limit int) (*PageResolver, error) {
@@ -26,53 +93,142 @@ func CreatePageResolver(inputFile string, limit int) (*PageResolver, error) {
     allowDanglingRedirects = true
   }
 
-  pageList := make([]RankedPage, n)
+
   rpchan := make(chan *RankedPage, 10000)
   go ReadRankedPages(inputFile, rpchan)
+
+  pageById := make(map[uint64] *RankedPage, n)
+  reindexMap := make(map[uint64] int, n)
 
   log.Printf("PageResolver: Reading ranked pages")
   countNonRedirects := 0
   i := 0
   for page := range rpchan {
+    pageById[page.Id] = page
+
     if !page.IsRedirect() {
+      if _, ok := reindexMap[page.Id]; ok {
+        panic(fmt.Sprintf("Found existing page in reindex map %s", page))
+      }
+      reindexMap[page.Id] = countNonRedirects + 1
       countNonRedirects++
     }
-    pageList[i] = *page
+
     i++
     if i >= n {
       break
     }
   }
-  log.Printf("PageResolver: Found %d/%d non-redirects", countNonRedirects, n)
-  log.Printf("PageResolver: Creating trie")
-  trie, err := createTrie(pageList, allowDanglingRedirects)
-  if err != nil { return nil, err }
-  runtime.GC()
 
-  log.Printf("PageResolver: Creating non-redirect map")
-  nonRedirects := make(map[uint64] RankedPage, countNonRedirects)
-  for i := 0; i < n; i++ {
-    page := pageList[i]
-    if !page.IsRedirect() {
-      nonRedirects[page.Id] = page
+  log.Printf("PageResolver: Reindexing pages")
+  reindexPages(pageById, reindexMap, allowDanglingRedirects)
+
+  log.Printf("PageResolver: Creating Trie")
+  trie := NewTrie()
+  rawPageList := make([]RankedPage, countNonRedirects, countNonRedirects)
+  i = 0
+  for _, startPage := range pageById {
+    insertionValue := TrieValue{Id: startPage.Id, Rank: startPage.Rank}
+    trie.AddEntry(normalizeTitle(startPage.Title), insertionValue)
+
+    if !startPage.IsRedirect() {
+      rawPageList[startPage.Id-1] = *startPage
+    }
+
+    i++
+    if i % 100000 == 0 && i > 0 {
+      log.Printf("Inserted page #%d", i)
+      sug, _ := trie.GetTopSuggestions("", 10)
+      log.Printf("Suggestions 1: %q", sug)
     }
   }
-  log.Printf("PageResolver: All done...")
 
-  pageList = nil // Force GC ?
+  log.Printf("PageResolver: Garbage collecting")
+  reindexMap = nil
+  pageById = nil
   runtime.GC()
+  log.Printf("PageResolver: All Done!")
+
+  return &PageResolver{
+    trie: trie,
+    pages: rawPageList,
+  }, nil
+}
+
+func pageResolverFromList(pages []RankedPage) (*PageResolver) {
+  trie := NewTrie()
+  for i, page := range pages {
+    trie.AddEntry(normalizeTitle(page.Title), TrieValue{Id: uint64(i+1), Rank: page.Rank})
+  }
 
   return &PageResolver {
     trie: trie,
-    pages: nonRedirects,
-  }, nil
+    pages: pages,
+  }
+}
+
+func (this *PageResolver) AddCategoryFromFile(categoryName string, inputFile string) (err error) {
+  f, err := os.Open(inputFile)
+  if err != nil {
+    return
+  }
+
+  pages := make([]RankedPage, 0)
+  reader := bufio.NewReader(f)
+  seenSet := make(map[uint64] bool)
+  for {
+    rawLine, err := reader.ReadString('\n')
+    if err == io.EOF {
+      break
+    } else if err != nil {
+      return err
+    }
+
+    pageName := strings.TrimSpace(rawLine)
+
+    if page, ok := this.PageByTitle(pageName); ok && !seenSet[page.Id] {
+      if page.Title == "Case Closed" || page.Title == "1987 in film" || page.Title == "George A. Romero" {
+        log.Printf("Found %s from %s", page.Title, pageName)
+      }
+      pages = append(pages, *page)
+      seenSet[page.Id] = true
+    } else {
+      continue
+    }
+  }
+
+  sort.Sort(RankedPageList(pages))
+
+  resolver := pageResolverFromList(pages)
+
+  this.categoryResolvers = append(this.categoryResolvers, CategoryResolver{
+    CategoryName: categoryName,
+    PageResolver: resolver,
+  })
+
+  return nil
+}
+
+func (this *PageResolver) GetCategories() []CategoryResolver {
+  return this.categoryResolvers
+}
+
+func (this *PageResolver) OrderedPageRange(start int, end int) []RankedPage {
+  if start > len(this.pages) {
+    return make([]RankedPage, 0)
+  } else if end > len(this.pages) {
+    end = len(this.pages)
+  }
+
+  return this.pages[start:end]
 }
 
 func (this *PageResolver) PrefixSuggestions(prefix string, n int) []RankedPage {
   suggestions, _ := this.trie.GetTopSuggestions(normalizeTitle(prefix), n)
   ret := make([]RankedPage, len(suggestions))
   for i, suggestion := range suggestions {
-    ret[i] = this.pages[suggestion.Id]
+    sp, _ := this.PageById(suggestion.Id)
+    ret[i] = *sp
   }
 
   return ret
@@ -81,68 +237,27 @@ func (this *PageResolver) PrefixSuggestions(prefix string, n int) []RankedPage {
 func (this *PageResolver) PageByTitle(title string) (*RankedPage, bool) {
   trieValue, ok := this.trie.GetEntry(normalizeTitle(title))
   if !ok { return nil, false }
-  page, ok := this.pages[trieValue.Id]
-  if !ok { return nil, false }
-  return &page, true
+  return this.PageById(trieValue.Id)
 }
 
 func (this *PageResolver) PageById(id uint64) (*RankedPage, bool) {
-  p, ok := this.pages[id]
-  return &p, ok
+  if id -1 > uint64(len(this.pages)) {
+    return nil, false
+  }
+
+  p := &this.pages[int(id) - 1]
+  return p, true
+}
+
+func (this *PageResolver) DumpPageList(outputFile string) (err error) {
+  var data []byte
+  if data, err = json.MarshalIndent(this.pages, "", "\t"); err != nil {
+    return
+  }
+
+  return ioutil.WriteFile(outputFile, data, 0755)
 }
 
 func normalizeTitle(title string) string {
   return strings.ToUpper(title)
 }
-
-func createTrie(pages []RankedPage, allowDanglingRedirects bool) (trie *Trie, err error) {
-  trie = NewTrie()
-
-  log.Printf("PageResolver: Trie: Building page map")
-  pageById := make(map[uint64] *RankedPage, len(pages))
-  for i := 0; i < len(pages); i++ {
-    pageById[pages[i].Id] = &pages[i]
-  }
-
-  log.Printf("PageResolver: Trie: Inserting %d pages", len(pages))
-  for i := 0; i < len(pages); i++ {
-    startPage := &pages[i]
-    insertionValue := TrieValue{Id: startPage.Id, Rank: startPage.Rank}
-    if startPage.IsRedirect() {
-      p := startPage
-      redirectCount := 0
-      for p.IsRedirect() && redirectCount < maxRedirects {
-        var ok bool
-        p, ok = pageById[p.RedirectToId]
-        if !ok {
-          if allowDanglingRedirects {
-            break
-          } else {
-            panic("We got a non-okay redirect")
-          }
-        }
-        redirectCount++
-      }
-
-      if p == nil {
-        continue
-      } else if redirectCount == maxRedirects {
-        log.Printf("Infinite redirect loop for %s", startPage)
-        continue;
-      }
-
-      insertionValue.Id = p.Id // Old rank, new id
-    }
-
-    trie.AddEntry(normalizeTitle(startPage.Title), insertionValue)
-
-    if i % 100000 == 0 && i > 0 {
-      log.Printf("Inserted page #%d", i)
-      sug, _ := trie.GetTopSuggestions("", 10)
-      log.Printf("Suggestions 1: %q", sug)
-    }
-  }
-
-  return trie, nil
-}
-

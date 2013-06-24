@@ -41,8 +41,39 @@ func main() {
     if err != nil { panic(err) }
     err = pageResolver.AddCategoryFromFile("Universities", "/home/tdimson/go/src/github.com/cosbynator/wikirank/data/list_of_world_universities.txt")
     if err != nil { panic(err) }
+    err = pageResolver.AddCategoryFromFile("Movies", "/home/tdimson/go/src/github.com/cosbynator/wikirank/data/list_of_movies.txt")
+    if err != nil { panic(err) }
+    err = pageResolver.AddCategoryFromFile("Countries", "/home/tdimson/go/src/github.com/cosbynator/wikirank/data/list_of_countries.txt")
+    if err != nil { panic(err) }
 
     rankhttp.Serve(pageResolver, port)
+
+  case "dumpcategory":
+    if len(os.Args) <= 4 {
+      log.Fatal("DumpCategory requires 'trieLocation', 'categoryName' and 'outputName'")
+      return
+    }
+
+    limit := math.MaxInt32
+    trieLocation := os.Args[2]
+    categoryName := os.Args[3]
+    outputName := os.Args[4]
+
+    var categoryLocation string
+    if categoryName == "universities" {
+      categoryLocation = "/home/tdimson/go/src/github.com/cosbynator/wikirank/data/list_of_world_universities.txt"
+    } else {
+      log.Fatalf("Unknown category '%s'", categoryName)
+      return
+    }
+
+    pageResolver, err := ranklib.CreatePageResolver(trieLocation, limit)
+    if err != nil { panic(err) }
+    if err = pageResolver.AddCategoryFromFile(categoryName, categoryLocation); err != nil {
+      panic(err)
+    }
+
+    pageResolver.GetCategories()[0].PageResolver.DumpPageList(outputName)
 
   case "pagerank":
     if len(os.Args) <= 3 {

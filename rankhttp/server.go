@@ -1,9 +1,6 @@
 package rankhttp
 
 import (
-  "io"
-  "os"
-  "bytes"
   "fmt"
   "log"
   "path"
@@ -13,7 +10,6 @@ import (
   "encoding/json"
   "html/template"
   "github.com/cosbynator/wikirank/ranklib"
-  "github.com/realistschuckle/gohaml"
 )
 
 const (
@@ -48,31 +44,69 @@ func fetchPageWithInfluencers(title string, pageResolver *ranklib.PageResolver) 
   }, true
 }
 
-func loadTemplate(templateName string) (engine *gohaml.Engine, err error) {
-  templateLocation := fmt.Sprintf("%s/%s", templateDir, templateName)
-  f, err := os.Open(templateLocation)
-  if err != nil {
-    return
-  }
-  defer f.Close()
-
-  var bb bytes.Buffer
-  if _, err = io.Copy(&bb, f); err != nil {
-    return
-  }
-
-  return gohaml.NewEngine(bb.String())
+type IndexData struct {
+  Categories []IndexCategory
 }
 
+type IndexCategory struct {
+  CategoryName string
+  TopTen []IndexCategoryPage
+}
 
-func index(w http.ResponseWriter, r *http.Request) {
-  t, err := template.ParseFiles(fmt.Sprintf("%s/index.gotemplate.html", templateDir))
+type IndexCategoryPage struct {
+  Page ranklib.RankedPage
+  PercentDecrease float64
+}
+
+var helpers template.FuncMap = template.FuncMap {
+  "indexToOrdinal": func(index int) int {return index+1 },
+  "wikiLink": func(title string) template.HTML {
+    return template.HTML(fmt.Sprintf("<a href='http://en.wikipedia.org/wiki/%s'>%s</a>", title, title))
+  },
+  "notFirst": func(index int) bool {
+    return index > 0
+  },
+}
+
+func index(pageResolver *ranklib.PageResolver, w http.ResponseWriter, r *http.Request) {
+  templateName := fmt.Sprintf("%s/index.gotemplate.html", templateDir)
+  t := template.New("index")
+  t.Funcs(helpers)
+  _, err := t.ParseFiles(templateName)
   if err != nil {
     http.Error(w, err.Error(), http.StatusInternalServerError)
   }
 
-  var i interface{}
-  t.Execute(w, i)
+  log.Printf("%s", t)
+
+  categories := make([]IndexCategory, 0, 1000)
+  for _, categoryResolver := range pageResolver.GetCategories() {
+    pages := make([]IndexCategoryPage, 0, 1000)
+    for i, page := range categoryResolver.PageResolver.OrderedPageRange(0,1000) {
+      percentDecrease := 0.0
+      if i > 0 {
+        percentDecrease = 100 * float64(page.Rank / pages[0].Page.Rank)
+      }
+
+      pages = append(pages, IndexCategoryPage{
+        Page: page,
+        PercentDecrease: percentDecrease,
+      })
+    }
+
+    categories = append(categories, IndexCategory{
+      CategoryName: categoryResolver.CategoryName,
+      TopTen: pages,
+    })
+  }
+
+  templateData := IndexData{categories}
+  err = t.ExecuteTemplate(w, "index.gotemplate.html", templateData)
+  if err != nil {
+    log.Printf(err.Error())
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+  }
+
 }
 
 func things(pageResolver *ranklib.PageResolver, w http.ResponseWriter, r *http.Request) {
@@ -154,7 +188,7 @@ func Serve(pageResolver *ranklib.PageResolver, port int) {
     } else if compareRegex.MatchString(r.URL.Path) {
       things(pageResolver, w, r)
     } else {
-      index(w, r)
+      index(pageResolver, w, r)
     }
   })
   setupStatics(

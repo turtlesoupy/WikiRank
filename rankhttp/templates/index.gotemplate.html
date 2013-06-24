@@ -50,6 +50,33 @@
         </div>
       </section>
 
+      <section class="rankings">
+        <div class="row-fluid">
+          {{ range $i, $category := .Categories}}
+          <div class="span6">
+          <h4 class="muted">Top {{$category.CategoryName}}</h4>
+              <table>
+                <thead>
+                </thead>
+                <tbody>
+                {{ range $rank, $p := $category.TopTen}}
+                <tr>
+                  <td>{{indexToOrdinal $rank}}</td> 
+                  <td>{{wikiLink $p.Page.Title}}</td>
+                  <td>
+                    {{ if notFirst $rank}}
+                      &darr; {{ $p.PercentDecrease | printf "%.1f"}}%
+                    {{end}}
+                  </td>
+                </tr>
+                {{end}}
+                </tbody>
+              </table>
+            </div>
+          {{end}}
+        </div>
+      </section>
+
       <hr>
       <footer>
         <p> &copy 2013 <a href="http://www.thomasdimson.com">Thomas Dimson</a> </p>

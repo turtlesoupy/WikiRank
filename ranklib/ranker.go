@@ -1,6 +1,7 @@
 package ranklib
 
 import (
+  "fmt"
   "log"
   "sort"
   "math"
@@ -38,6 +39,10 @@ type RankedPage struct {
   Rank float32
   OutboundCount uint32
   Influencers []Influencer
+}
+
+func (this *RankedPage) String() string {
+  return fmt.Sprintf("RankedPage[title=%s, id=%d, rank=%f]", this.Title, this.Id, this.Rank)
 }
 
 func (rp *RankedPage) IsRedirect() bool {
