@@ -40,6 +40,7 @@ var longEWR = mustCompileInfobox("(longEW|long_EW|long_direction|longdirection)"
 var coordInfoboxR = regexp.MustCompile(fmt.Sprintf(`(?i)[|] *(coordinates|coord|coordinate) *= ({{.*?}})`))
 
 func optionalFloat(s string) (float64, error) {
+  // ParseFloat returns non-nil error when it can't parse. Empty string is not an error here.
   if s == "" {
     return 0, nil
   } else {
@@ -101,7 +102,7 @@ func coordinateFromInfobox(pe *pageElement) (Coordinate, bool) {
   return coordinateFromStrings(latdString, latmString, latsString, latNS, longdString, longmString, longsString, longEW)
 }
 
-var middleBit = regexp.MustCompile("(?i){{coord *[|](.*)?}}")
+var middleBit = regexp.MustCompile("(?i){{coords? *[|](.*)?}}")
 func decimalCoordinate(wikiCoord string) (Coordinate, bool) {
   // See http://en.wikipedia.org/wiki/Template:Coord/doc/internals
   middle := middleBit.FindStringSubmatch(wikiCoord)
@@ -125,6 +126,11 @@ func decimalCoordinate(wikiCoord string) (Coordinate, bool) {
       end = i
       break
     }
+  }
+
+  if start == -1 {
+    log.Printf("Error coordinate format: '%s'", wikiCoord)
+    return Coordinate{}, false
   }
 
   fmtLength := end - start
