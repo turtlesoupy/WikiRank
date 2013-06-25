@@ -1,12 +1,20 @@
 package ranklib
 
 import (
-  "encoding/xml"
-  "log"
-  "fmt"
-  "regexp"
   "os"
   "io"
+  "log"
+  "fmt"
+  "bufio"
+  "regexp"
+  "strings"
+  "encoding/xml"
+  "compress/bzip2"
+  "compress/gzip"
+)
+
+const (
+  readerBufferSize = 32 * 1024 * 1024
 )
 
 var titleFilter = regexp.MustCompile("^(File|Talk|Special|Wikipedia|Wiktionary|User|User Talk|Category|Portal|Template|Mediawiki):")
@@ -25,6 +33,7 @@ type pageElement struct {
 type Page struct {
   Title string
   Id uint64
+  Coordinate Coordinate
   RedirectToId uint64
   Links []uint64
 }
@@ -41,18 +50,34 @@ func yieldPageElements(fileName string, cp chan *pageElement) {
   xmlFile, err := os.Open(fileName)
   if(err != nil) { panic(err) }
 
+  var xmlReader io.Reader = bufio.NewReaderSize(xmlFile, readerBufferSize)
+  if strings.HasSuffix(fileName, ".bz2") {
+    log.Printf("Assuming bzip2 compressed dump")
+    xmlReader = bzip2.NewReader(xmlReader)
+  } else if strings.HasSuffix(fileName, ".gz") {
+    log.Printf("Assuming gzip compressed dump")
+    xmlReader, err = gzip.NewReader(xmlReader)
+  } else {
+    log.Printf("Assuming uncompressed dump")
+  }
+
+
+  if(err != nil) { panic(err) }
+
   defer xmlFile.Close()
   defer close(cp)
 
   log.Printf("Starting parse")
-  decoder := xml.NewDecoder(xmlFile)
+  decoder := xml.NewDecoder(xmlReader)
   for {
     token, err := decoder.Token()
-    if token == nil || err == io.EOF {
+    if err == io.EOF || token == nil {
+      log.Printf("EOF")
       break
     } else if err != nil {
       panic(err)
     }
+
 
     switch e := token.(type) {
     case xml.StartElement:
@@ -73,9 +98,6 @@ func yieldPageElements(fileName string, cp chan *pageElement) {
   }
 }
 
-
-var linkRegex = regexp.MustCompile(`\[\[(?:([^|\]]*)\|)?([^\]]+)\]\]`)
-var cleanSectionRegex = regexp.MustCompile(`^[^#]*`)
 func newPage(pe *pageElement, titleIdMap map[string]uint64) *Page {
   p := Page{Title: pe.Title, Id: pe.Id, RedirectToId: 0}
   if len(pe.Redirect.Title) > 0 {
@@ -102,6 +124,10 @@ func newPage(pe *pageElement, titleIdMap map[string]uint64) *Page {
     }
   }
 
+  if c, ok := coordinatesFromWikiText(pe); ok {
+    p.Coordinate = c
+  }
+
   return &p
 }
 
@@ -117,6 +143,7 @@ func ReadFrom(fileName string, outputName string) (err error) {
   for page := range pageInputChan {
     titleIdMap[page.Title] = page.Id
     numPages++
+    newPage(page, titleIdMap)
 
     if numPages % 10000 == 0 {
       log.Printf("Page #%d", numPages)
