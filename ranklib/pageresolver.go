@@ -28,9 +28,6 @@ func reindexPages(pageMap map[uint64] *RankedPage, reindexMap map[uint64] int) {
   for _, page := range pageMap {
     id := page.Id
     page.Id = uint64(reindexMap[id])
-    for j := range page.Influencers {
-      page.Influencers[j].Id = uint64(reindexMap[page.Influencers[j].Id])
-    }
   }
 }
 

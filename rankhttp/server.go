@@ -17,33 +17,6 @@ const (
   templateDir = "/home/tdimson/go/src/github.com/cosbynator/wikirank/rankhttp/templates"
 )
 
-type RankedPageWithInfluencers struct {
-  Page ranklib.RankedPage
-  Influencers []RankedPageInfluencer
-}
-
-type RankedPageInfluencer struct {
-  Page ranklib.RankedPage
-  Influence float32
-}
-
-func fetchPageWithInfluencers(title string, pageResolver *ranklib.PageResolver) (*RankedPageWithInfluencers, bool) {
-  page, ok := pageResolver.PageByTitle(title)
-  if !ok { return nil, false }
-
-  influencers := make([]RankedPageInfluencer, 0, len(page.Influencers))
-  for _, influencer := range page.Influencers {
-    if iPage, iOk := pageResolver.PageById(influencer.Id); iOk {
-      influencers = append(influencers, RankedPageInfluencer{Page: *iPage, Influence: influencer.Influence})
-    }
-  }
-
-  return &RankedPageWithInfluencers{
-    Page: *page,
-    Influencers: influencers,
-  }, true
-}
-
 type IndexData struct {
   Categories []IndexCategory
 }
@@ -118,7 +91,7 @@ func things(pageResolver *ranklib.PageResolver, w http.ResponseWriter, r *http.R
 
   ret := make([]interface{}, 0, len(things))
   for _, name := range things {
-    page, ok := fetchPageWithInfluencers(name, pageResolver)
+    page, ok := pageResolver.PageByTitle(name)
     if !ok {
       http.Error(w, fmt.Sprintf("%s doesn't exist", name), http.StatusBadRequest)
       return

@@ -59,7 +59,7 @@ func ReadRankedPages(fileName string, cp chan *RankedPage) {
 }
 
 func WritePages(fileName string, numPages int, cp chan *Page, done chan bool) {
-  outputFile, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0600)
+  outputFile, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
   if err != nil { panic(err) }
   defer outputFile.Close()
 
@@ -78,7 +78,7 @@ func WritePages(fileName string, numPages int, cp chan *Page, done chan bool) {
 }
 
 func WriteRankedPages(fileName string, numPages int, cp chan *RankedPage, done chan bool) {
-  outputFile, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0600)
+  outputFile, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
   if err != nil { panic(err) }
   defer outputFile.Close()
 

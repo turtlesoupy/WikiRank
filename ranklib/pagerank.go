@@ -5,7 +5,7 @@ import (
   "log"
 )
 
-func pageRank(pages []Page, walkProbability float64, convergenceCriteron float64) ([]float64, map[uint64] uint32) {
+func pageRank(pages []Page, walkProbability float64, convergenceCriteron float64) ([]float64) {
   beta, epsilon := walkProbability, convergenceCriteron
   log.Printf("Ranking with beta='%f', epsilon='%f'", beta, epsilon)
   n := len(pages)
@@ -54,5 +54,5 @@ func pageRank(pages []Page, walkProbability float64, convergenceCriteron float64
     log.Printf("Pagerank iteration #%d delta=%f", iteration, lastChange)
   }
 
-  return thisRank, idRemap
+  return thisRank
 }

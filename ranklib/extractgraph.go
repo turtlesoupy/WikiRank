@@ -44,7 +44,6 @@ type Page struct {
   Flags uint32
 }
 
-
 type Link struct {
   PageId uint64
   Count uint32

@@ -64,9 +64,8 @@ func DumpCategory(rankedPageFile string, categoryFile string, outputFile string)
   go ReadRankedPages(rankedPageFile, rpchan)
   for rankedPage := range rpchan {
     noisy := false
-    if strings.HasPrefix(strings.ToUpper(rankedPage.Title), "IRON MAN") {
+    if rankedPage.Title == "Krazy Kat" {
       noisy = true
-        log.Printf("%s from %q", rankedPage.Title, rankedPage.Aliases)
     }
 
     nt := normalizedTitle(dumpConfig, rankedPage.Title)

@@ -12,7 +12,7 @@ FORBIDDEN_PAGES = set(["Television film", "Television movie", "Film genre", "Doc
   "Shoot 'Em up", "V", "Die Fledermaus", "Robin of Locksley", "The Decalogue", "2001 film", "Mad Max", "Carry On (film series)",
   "Detective Conan"
 ])
-FORBIDDEN_RE = re.compile(r"^(Lists? of|Template( talk)?:|\d\d\d\ds? in film|\d\d\d\d film$)")
+FORBIDDEN_RE = re.compile(r"^(Lists? of|Template( talk)?:|Category:|\d\d\d\ds? in film|\d\d\d\d film$)")
 WIKI_ARTICLES = [
   "List of films: numbers",
   "List of films: A",

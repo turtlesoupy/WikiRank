@@ -68,7 +68,7 @@ func main() {
     inputName := os.Args[2]
     outputName := os.Args[3]
     log.Printf("Page ranking from '%s' into '%s'", inputName, outputName)
-    err := ranklib.RankAndWrite(inputName, outputName, 10)
+    err := ranklib.RankAndWrite(inputName, outputName)
     if err != nil { panic(err) }
 
   case "extract_graph":
