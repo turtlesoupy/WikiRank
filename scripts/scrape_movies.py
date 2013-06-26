@@ -9,9 +9,8 @@ import codecs
 import urllib
 
 FORBIDDEN_PAGES = set(["Television film", "Television movie", "Film genre", "Documentary film", "James Bond", "Star Trek", "Star Wars", "Back to the Future",
-  "Shoot 'Em up", "V", "Die Fledermaus", "Robin of Locksley", "The Decalogue", "2001 film", "Mad Max", 
-  "Detective Conan",
-  "EDtv" #Conflicts with "enhanced definition television redirect
+  "Shoot 'Em up", "V", "Die Fledermaus", "Robin of Locksley", "The Decalogue", "2001 film", "Mad Max", "Carry On (film series)",
+  "Detective Conan"
 ])
 FORBIDDEN_RE = re.compile(r"^(Lists? of|Template( talk)?:|\d\d\d\ds? in film|\d\d\d\d film$)")
 WIKI_ARTICLES = [

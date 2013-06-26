@@ -50,31 +50,16 @@ func main() {
 
   case "dumpcategory":
     if len(os.Args) <= 4 {
-      log.Fatal("DumpCategory requires 'trieLocation', 'categoryName' and 'outputName'")
+      log.Fatal("DumpCategory requires 'rankedPageFile', 'categoryFile' and 'outputName'")
       return
     }
 
-    limit := math.MaxInt32
-    trieLocation := os.Args[2]
-    categoryName := os.Args[3]
+    rankedPageFile := os.Args[2]
+    categoryFile := os.Args[3]
     outputName := os.Args[4]
 
-    var categoryLocation string
-    if categoryName == "universities" {
-      categoryLocation = "/home/tdimson/go/src/github.com/cosbynator/wikirank/data/list_of_world_universities.txt"
-    } else {
-      log.Fatalf("Unknown category '%s'", categoryName)
-      return
-    }
-
-    pageResolver, err := ranklib.CreatePageResolver(trieLocation, limit)
+    err := ranklib.DumpCategory(rankedPageFile, categoryFile, outputName)
     if err != nil { panic(err) }
-    if err = pageResolver.AddCategoryFromFile(categoryName, categoryLocation); err != nil {
-      panic(err)
-    }
-
-    pageResolver.GetCategories()[0].PageResolver.DumpPageList(outputName)
-
   case "pagerank":
     if len(os.Args) <= 3 {
       log.Fatal("PageRank: Required argument 'input.gob' / 'ranked_output.gob' missing")

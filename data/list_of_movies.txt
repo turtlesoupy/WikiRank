@@ -272,7 +272,6 @@ Eight Men Out
 Eight on the Lam
 8 Seconds
 8 Women
-84, Charing Cross Road
 84 Charing Cross Road (film)
 88 Minutes
 8: The Mormon Proposition
@@ -321,6 +320,7 @@ Million Dollar Baby
 The Million Dollar Duck
 Millions
 Infinity (film)
+84, Charing Cross Road
 A-ge-man
 A-Haunting We Will Go (1942 film)
 À Nos Amours
@@ -356,7 +356,7 @@ Aankhen (1993 film)
 Aankhen (2002 film)
 Aao Pyaar Karen (1994 film)
 Aapathbandhavudu
-Aapo
+Aapo (film)
 Aar Paar
 Aaron Loves Angela
 Aaru (film)
@@ -522,6 +522,7 @@ The Adventures of Elmo in Grouchland
 The Adventures of Ford Fairlane
 The Adventures of Huck Finn (1993 film)
 The Adventures of Ichabod and Mr. Toad
+Adventures of Juku the Dog
 The Adventures of Kathlyn
 The Adventures of Milo and Otis
 The Adventures of Pinocchio (1996 film)
@@ -540,6 +541,7 @@ The Adventures of a Two-Minute Werewolf
 Adventures in Wild California
 Advise & Consent (film)
 Ae Fond Kiss...
+Aeg elada, aeg armastada
 Aelita
 Aerial Anarchists
 Aerograd
@@ -564,6 +566,7 @@ The African Queen (film)
 After All It's Only Life
 After Dark, My Sweet
 After Death
+After Earth
 After the Fox
 After Hours (film)
 After Life (film)
@@ -598,6 +601,7 @@ Agent Cody Banks 2: Destination London
 Agent for H.A.R.M.
 Agent Orange (film)
 Agent Vinod (2012 film)
+Agent Wild Duck
 The Ages of Lulu
 The Aggressives
 Agneepath (1990 film)
@@ -799,6 +803,7 @@ All of Me (1984 film)
 All Men Are Mortal (film)
 All Monsters Attack
 All My Babies
+All My Lenins
 All Night Long (1962 film)
 All Night Long (1981 film)
 All Night Long (1992 film)
@@ -1049,6 +1054,7 @@ Android (film)
 The Andromeda Nebula
 The Andromeda Strain (film)
 Ang Tanging Ina
+Ángel (film)
 Angel (1937 film)
 Angel (1966 film)
 Angel (1982 film)
@@ -1175,6 +1181,7 @@ Another Earth
 Another Fine Mess (1930 film)
 Another Gay Movie
 Another Man's Poison
+Another Mother
 Another Public Enemy
 Another Stakeout
 Another Thin Man
@@ -1217,7 +1224,6 @@ Anything to Survive
 Anytown, USA (film)
 Anywhere But Here (film)
 Anzio (film)
-Ángel (film)
 Apache (film)
 Aparajito
 Aparichit (2006 film)
@@ -1265,15 +1271,15 @@ Aradhana (1962 film)
 Aradhana (1969 film)
 Aradhana (1987 film)
 Araf (film)
+April Fool's Day (2008 film)
+The Adventures of Mary-Kate & Ashley
+American Crude
 Aragami
 Arahan
 Keerthi Chakra
 Arang (film)
 Aranya Rodan
 Aranyer Din Ratri
-April Fool's Day (2008 film)
-The Adventures of Mary-Kate & Ashley
-American Crude
 Ararat (film)
 Arbitrage (film)
 L'Arbre, le maire et la médiathèque
@@ -1504,6 +1510,7 @@ Automaton Transfusion
 Autopsy (film)
 Autour d'une cabine
 An Autumn Afternoon
+Autumn Ball
 Autumn Leaves (film)
 Autumn Moon
 Autumn in New York (film)
@@ -1588,7 +1595,6 @@ Bachelor Mother
 Bachelor Party (1984 film)
 Back to Bataan
 Back to the Beach
-Back to the Future
 Back to the Future Part II
 Back to the Future Part III
 Back to the Future (series)
@@ -2982,6 +2988,7 @@ Camp Nowhere
 The Campaign (film)
 Campane a martello
 Camping Cosmos
+El Cantante
 Can't Buy Me Love (film)
 Can't Hardly Wait
 Can't Stop the Music
@@ -3218,7 +3225,7 @@ The Challenge (2003 film)
 Chalte Chalte (2003 film)
 The Chamber (film)
 Chameli (film)
-The Champ
+The Champ (1931 film)
 Champagne (film)
 Champagne for Caesar
 Champion (1949 film)
@@ -3431,6 +3438,7 @@ Cimarron (1931 film)
 Cimarron (1960 film)
 The Cincinnati Kid
 Cinderella (1950 film)
+Cinderella (musical)
 Cinderella (1997 film)
 Cinderella II: Dreams Come True
 Cinderella III: A Twist in Time
@@ -3494,6 +3502,7 @@ Clash by Night
 Clash of the Titans (1981 film)
 Clash of the Titans (2010 film)
 Clash of the Wolves
+The Class (2007 film)
 The Class (2008 film)
 Class (film)
 Class of 1984
@@ -3549,7 +3558,7 @@ Cloverfield
 The Clown Barber
 Le Clown et ses chiens
 Clownhouse
-The Clowns
+The Clowns (film)
 Club Dread
 Club Paradise
 Clubland (2007 film)
@@ -3844,12 +3853,11 @@ Crash (2004 film)
 Crash Landing (film)
 The Crawling Eye
 Crawlspace (1986 film)
-Crayon (film)
-Crazed Fruit
-Cinderella (musical)
 Carnivorous (film)
 Children of the Dark
 The Corpse Grinders
+Crayon (film)
+Crazed Fruit
 The Crazies (1973 film)
 The Crazies (2010 film)
 Crazy (2000 film)
@@ -4151,6 +4159,7 @@ Darkman II: The Return of Durant
 Darkness (2002 film)
 Darkness Falls (1999 film)
 Darkness Falls (2003 film)
+Darkness in Tallinn
 Darkon (film)
 Darkside Blues
 Darling (1965 film)
@@ -4243,6 +4252,7 @@ The Curve (film)
 Dead Man's Letters
 Dead Man's Shoes (2004 film)
 Dead Men Don't Wear Plaid
+Dead Mountaineer's Hotel (film)
 Dead of Night (film)
 The Dead One
 Dead Poets Society
@@ -4334,6 +4344,7 @@ The Decameron (1971 film)
 Deceived
 Deceiver (film)
 The Deceivers (film)
+December Heat
 Deception (1946 film)
 Deception (2008 film)
 Decision Before Dawn
@@ -4457,7 +4468,6 @@ Destry Rides Again
 Desyat Negrityat
 Detachment (film)
 The Detective (1968 film)
-Detective Conan
 Captured in Her Eyes
 Countdown to Heaven
 Crossroad in the Ancient Capital
@@ -4472,6 +4482,7 @@ The Time-Bombed Skyscraper
 Deterrence (film)
 Detour (1945 film)
 Detroit Rock City (film)
+Detsembrikuumus
 Deuce Bigalow: European Gigolo
 Deuce Bigalow: Male Gigolo
 Deuces Wild
@@ -4501,7 +4512,7 @@ The Devil Rides Out (film)
 The Devil Wears Prada (film)
 The Devil Who Limped
 The Devil Is a Woman (1935 film)
-The Devil's Advocate (film)
+The Devil's Advocate (1997 film)
 The Devil's Backbone
 The Devil's Brigade (film)
 The Devil's Double
@@ -4530,7 +4541,6 @@ Le Diable boiteux (film)
 Diabolique (1996 film)
 Les Diaboliques (film)
 Dial M for Murder
-Diamond Dead
 Diamond Men
 Diamonds Are Forever (film)
 Diane (film)
@@ -4979,21 +4989,13 @@ Dust (2009 film)
 Dust Devil (film)
 Dutch (film)
 Dying Young
+Der Mafu-Käfig
+Don't Ring the Doorbell
 Dylan Dog: Dead of Night
 Dynamite Chicken
 Dynamite Warrior
 Dünyayı Kurtaran Adam
-Der Mafu-Käfig
-Don't Ring the Doorbell
 E.T. the Extra-Terrestrial
-Eleven Men Out
-Eight Below
-Eight Days a Week (film)
-Eight Legged Freaks
-Eight Thousand Li of Cloud and Moon
-The Eighth Day (film)
-El cantante
-Der Einstein des Sex
 Each Dawn I Die
 The Eagle (1925 film)
 The Eagle (2011 film)
@@ -5024,7 +5026,7 @@ East Lynne (1916 film)
 East Palace, West Palace
 The East Is Red (film)
 East Side Kids (film)
-East Side Story (film)
+East Side Story (2006 film)
 Easter Parade (1948 film)
 Eastern Promises (film)
 An Eastern Westerner
@@ -5084,7 +5086,6 @@ Edison Bugg's Invention
 Edison, the Man
 Edison, Marconi & Co.
 Edmond (film)
-EDtv
 Educating Rita (film)
 An Education
 The Education of Charlie Banks
@@ -5103,7 +5104,13 @@ The Egyptian (film)
 Eien no 1/2
 Eierdiebe
 The Eiger Sanction (film)
+Eight Below
+Eight Days a Week (film)
+Eight Legged Freaks
+Eight Thousand Li of Cloud and Moon
+The Eighth Day (film)
 Eijanaika (film)
+Der Einstein des Sex
 Ek Aur Ek Gyarah
 Ek Chhotisi Love Story
 Ek Khiladi Ek Haseena (film)
@@ -5129,6 +5136,7 @@ Elephant (2003 film)
 Elephant Boy (film)
 The Elephant Man (film)
 Elephant Walk
+Eleven Men Out
 Elevated (film)
 Elevator to the Gallows
 Elf (film)
@@ -5155,7 +5163,6 @@ Elvira, Mistress of the Dark
 Elvis and Anabelle
 Elvis Has Left the Building
 Elvis: That's the Way it Is
-El mariachi
 Él (film)
 Emanuelle and the Last Cannibals
 Embrujada
@@ -5224,7 +5231,7 @@ Endgame (1983 film)
 Endgame (short film)
 Endhiran
 Endless Desire
-Endless Love (film)
+Endless Love (1981 film)
 The Endless Summer
 Enduring Love (film)
 Enemies, a Love Story (film)
@@ -5472,7 +5479,7 @@ Fair Game (2005 film)
 Fair Game (2010 film)
 The Fairylogue and Radio-Plays
 FairyTale: A True Story
-Faithful (film)
+Faithful (1996 film)
 Faithless (2000 film)
 Fake (film)
 Falcon Down
@@ -5618,7 +5625,7 @@ Fellini's Casanova
 Female Convict Scorpion: Jailhouse 41
 Female Trouble
 Female Vampire
-Femme Fatale (film)
+Femme Fatale (2002 film)
 La Femme Nikita
 Fengming, a Chinese Memoir
 FernGully: The Last Rainforest
@@ -5634,6 +5641,7 @@ Fever Pitch (1997 film)
 Fever Pitch (2005 film)
 A Few Good Men
 Ffolkes (film)
+Firewater (film)
 The First $20 Million Is Always the Hardest
 First Action Hero
 First Blood
@@ -5951,7 +5959,7 @@ Foxy Brown (1974 film)
 The Devil's Brother
 Fracture (2007 film)
 Fragile (film)
-Frailty
+Frailty (film)
 Framed (1947 film)
 Frances
 Frank Film
@@ -6040,6 +6048,7 @@ Fried Green Tomatoes (film)
 Friedemann Bach (film)
 Friend (2001 film)
 Friend (2009 film)
+A Friend of Mine (2011 film)
 Friendly Persuasion (film)
 Friends (1971 film)
 Friends (1999 film)
@@ -6244,6 +6253,7 @@ Gentleman's Agreement
 Gentlemen Broncos
 Gentlemen of Fortune
 Gentlemen Prefer Blondes (film)
+Georg (film)
 George of the Jungle (film)
 George of the Jungle 2
 George Lucas in Love
@@ -6253,6 +6263,7 @@ George White's 1935 Scandals
 Georgia (1988 film)
 Georgia (1995 film)
 Georgia Rule
+Georgica (film)
 Georgy Girl
 Gerald McBoing-Boing
 Geraldine's Fortune
@@ -6609,6 +6620,7 @@ Grassroots (film)
 Grave Encounters
 Grave of the Fireflies
 The Gravedancers
+Graveyard Keeper's Daughter
 Graveyard Shift (1990 film)
 Gray Lady Down
 Gray Matters
@@ -6698,6 +6710,7 @@ Grilled (film)
 The Grim Game
 Grind (2003 film)
 Grindhouse (film)
+El Gringo
 Grizzly (film)
 Grizzly Man
 Groom Lake (film)
@@ -6770,7 +6783,6 @@ Guzaarish
 Gymkata
 Gypsy (1962 film)
 Gypsy 83
-The Game (2013 film)
 The Ghosts of Buxley Hall
 Category:Articles with links needing disambiguation from March 2013
 H (2002 film)
@@ -7033,6 +7045,7 @@ Heading South (film)
 The Headsman (2005 film)
 Health (film)
 Hear My Song
+The Heart of the Bear
 The Heart Breaker
 The Heart Is Deceitful Above All Things
 Heart of a Dog (film)
@@ -7549,6 +7562,7 @@ Hum Tum
 Hum Tumhare Hain Sanam
 The Human Centipede (First Sequence)
 The Human Centipede 2 (Full Sequence)
+The Human Condition (film series)
 Human Desire
 Human Highway
 Human Nature (film)
@@ -7604,7 +7618,6 @@ Hype!
 Hysteria (1965 film)
 Hysteria (2011 film)
 Hysterical Blindness (film)
-The Human Condition (film series)
 Hell Penitentiary
 Hey Tony! What's the Story?
 I Accuse My Parents
@@ -7725,6 +7738,7 @@ I Want Someone to Eat Cheese With
 I Want What I Want
 I Was Born, But...
 I Was a Communist for the FBI
+I Was Here (film)
 I Was a Male War Bride
 I Was Monty's Double (film)
 I Was a Teenage Frankenstein
@@ -7789,6 +7803,7 @@ Identity Pieces
 The Ides of March (film)
 Idiocracy
 The Idiot (1951 film)
+The Idiot (2011 film)
 Idiot Box (1996 film)
 Idiot's Delight (film)
 The Idiots
@@ -7866,7 +7881,7 @@ In Darkness (2011 film)
 In Dreams (film)
 In the Electric Mist
 In Enemy Hands (film)
-In the Gloaming
+In the Gloaming (film)
 In God's Hands (film)
 In Good Company (2004 film)
 In the Good Old Summertime
@@ -8054,7 +8069,6 @@ Investigation of a Citizen Above Suspicion
 Invictus (film)
 Invincible (2001 film)
 Invincible (2006 film)
-The Invincible Iron Man (film)
 The Invisible (film)
 Invisible Agent
 The Invisible Circus (film)
@@ -8078,7 +8092,7 @@ Iron Eagle
 Iron Eagle II
 The Iron Giant
 The Iron Lady (film)
-Iron Man (film)
+Iron Man (2008 film)
 Iron Man 2
 Iron Monkey (1977 film)
 Iron Monkey (1993 film)
@@ -8168,7 +8182,9 @@ Ivanhoe (film)
 Ivans XTC
 Izo
 Izzy and Moe
+I a Woman
 I Know How Many Runs You Scored Last Summer
+The Invincible Iron Man (2008 film)
 J. D.'s Revenge
 J. Edgar (film)
 Jaan-E-Mann: Let's Fall in Love... Again
@@ -8524,6 +8540,7 @@ Karin's Face
 Karl Liebknecht (film)
 Karmic Mahjong
 Kart Racer
+Karujaht Pärnumaal
 Karz (film)
 Katasumi and 4444444444
 Kate & Leopold
@@ -8556,6 +8573,7 @@ The Kentucky Fried Movie
 Keoma (film)
 Kerd ma lui
 Kes (film)
+Spring (film)
 Kevin & Perry Go Large
 Key Largo (film)
 Keyhole (film)
@@ -8646,7 +8664,6 @@ The King (2005 film)
 King Arthur (film)
 King of California
 King of the Children
-1987 film
 The King and the Clown
 King Cobra (film)
 King of Comedy (1999 film)
@@ -8727,6 +8744,7 @@ The Kites Flying in the Sky
 Kitty Foyle (film)
 Kitty Kornered
 The Klansman
+Klass (film)
 Klatretøsen
 Kleine Freiheit
 Kleinruppin forever
@@ -9076,6 +9094,7 @@ Legion (2010 film)
 Legion of the Night
 Legionnaire (film)
 Legong (film)
+Leiutajateküla Lotte
 Lemming (film)
 Lemonade Joe
 Lemony Snicket's A Series of Unfortunate Events
@@ -9446,6 +9465,8 @@ The Lost World (1925 film)
 The Lost World (1960 film)
 A Lot Like Love
 Lotna
+Lotte from Gadgetville
+Lotte and the Moonstone Secret
 Lotus Lantern
 Howard Armstrong (musician)
 Louisiana Purchase (film)
@@ -9635,7 +9656,6 @@ The Mad Ghoul
 Mad Hot Ballroom
 Mad Love (1935 film)
 Mad Love (1995 film)
-Mad Max
 Mad Max 2: The Road Warrior
 Mad Max Beyond Thunderdome
 Mad Max 4: Fury Road
@@ -9906,6 +9926,7 @@ Margaret's Museum
 Margin Call (film)
 Margot at the Wedding
 Maria Full of Grace
+El Mariachi
 Marian Anderson: the Lincoln Memorial Concert
 Marie Antoinette (1938 film)
 Marie Antoinette (2006 film)
@@ -9977,7 +9998,7 @@ Master of Disguise
 Master of the Flying Guillotine
 Master Hands
 Master of the World (1961 film)
-Masterminds (film)
+Masterminds (1997 film)
 Masters of the Universe (film)
 Masti (2004 film)
 Mata Hari (1931 film)
@@ -10070,6 +10091,7 @@ Megaforce
 Megamind
 Megan Is Missing
 Meghe Dhaka Tara
+Mehed ei nuta
 Mehndi (film)
 Mekhong Full Moon Party
 Melancholia (2011 film)
@@ -10229,6 +10251,7 @@ Milou en Mai
 Mimic (film)
 Mimic: Sentinel
 Min and Bill
+Mina olin siin
 Mind Game (film)
 Mindhunters
 Mini Moni Ja Movie: Okashina Daibouken
@@ -10535,12 +10558,12 @@ Mr. Hobbs Takes a Vacation
 Mr. Holland's Opus
 Mr. Lucky (film)
 Mr. Magoo (film)
-Mr. Magoo's Christmas Carol
-Mr. Magorium's Wonder Emporium
-Mr. Majestyk
 The Mafu Cage
 The Man from The Deep River
 MindFlesh
+Mr. Magoo's Christmas Carol
+Mr. Magorium's Wonder Emporium
+Mr. Majestyk
 Mr. Mike's Mondo Video
 Mr. Mom
 Mr. and Mrs. Iyer
@@ -10634,6 +10657,7 @@ Musa (film)
 Musafir (2004 film)
 Muscle Tussle
 The Muse (1999 film)
+Mushrooming (film)
 Music from Another Room (film)
 Music Box (film)
 The Music Box (film)
@@ -10826,6 +10850,7 @@ Namak Haraam
 Name of the Rose (2003 film)
 The Name of the Rose (film)
 The Nameless (film)
+Names in Marble (film)
 The Namesake (film)
 Namkeen
 Nancy Drew (2007 film)
@@ -10945,6 +10970,7 @@ New Rose Hotel (film)
 New in Town
 New Waterford Girl
 The New World (2005 film)
+The New World (2011 film)
 New Year's Day (film)
 New Year's Eve (2011 film)
 New York Doll
@@ -11108,6 +11134,8 @@ Nonchan Noriben
 None But the Lonely Heart (film)
 Nongjungjo
 Noo Hin: The Movie
+Noor pensionär
+Noored kotkad
 The Noose (film)
 Nora's Hair Salon
 Norbit
@@ -11254,6 +11282,7 @@ Oh, My God (2008 film)
 Oh, What a Night (1944 film)
 Oh, What a Night (1992 film)
 Oh... Rosalinda!!
+Ohtlikud mängud
 The Oil, the Baby and the Transylvanians
 Oily Hare
 OK Baytong
@@ -11496,6 +11525,7 @@ The Other Man (2008 film)
 Other People's Money
 The Other Side of the Bed
 The Other Side of Heaven
+The Other Side of Midnight
 The Other Side of the Wind
 The Other Sister
 The Others (2001 film)
@@ -11776,6 +11806,7 @@ Penitentiary (1979 film)
 Penn & Teller Get Killed
 Pennies from Heaven (1936 film)
 Pennies from Heaven (1981 film)
+Pennies From Heaven (1978 television drama)
 Penny Dreadful (2006 film)
 Penny Points to Paradise
 Penny Serenade
@@ -11873,6 +11904,7 @@ The Phantom of the Opera (1989 film)
 The Phantom of the Opera (1998 film)
 The Phantom of the Opera (2004 film)
 Phantom of the Paradise
+Phantom of the Mall: Eric's Revenge
 The Phantom Planet
 The Phantom Tollbooth (film)
 Phantoms (film)
@@ -12046,6 +12078,7 @@ Podium (film)
 Point Blank (1967 film)
 Point Break
 Point of No Return (film)
+The Point!
 Poison (film)
 Poison Ivy (film)
 Pokrovsky Gates
@@ -12076,6 +12109,7 @@ Police Academy 4: Citizens on Patrol
 Police Academy 5: Assignment Miami Beach
 Police Academy 6: City Under Siege
 Police Academy: Mission to Moscow
+Police Academy (film series)
 Police Story (film)
 Police Story 2
 Polish Wedding
@@ -12312,6 +12346,7 @@ The Public Enemy
 Puddle Cruiser
 Puff, Puff, Pass
 The Puffy Chair
+Püha Tõnu kiusamine
 Pulp (1972 film)
 Pulp Fiction
 Pulse (2006 film)
@@ -12370,9 +12405,6 @@ Puttin' on the Ritz (film)
 Pyaasa (1957 film)
 Pygmalion (1938 film)
 Pyongyang Nalpharam
-Pennies From Heaven (1978 television drama)
-Police Academy (film series)
-The Point!
 Passenger (1961 film)
 Q (film)
 Q Planes
@@ -12472,7 +12504,7 @@ Quinceañera (film)
 Quintet (film)
 Quints
 Quitting
-Quiz Show
+Quiz Show (film)
 Quo Vadis (1951 film)
 Quo Vadis (2001 film)
 R-Point
@@ -12670,7 +12702,7 @@ Red Rock West
 Red Scorpion
 The Red Shoes (1948 film)
 Red Sonja (1985 film)
-Red Sorghum
+Red Sorghum (film)
 Red State (2006 film)
 Red State (2011 film)
 Red Sun
@@ -12759,6 +12791,7 @@ Resurrection (1999 film)
 Resurrection of the Little Match Girl
 El Retorno del Hombre Lobo
 El Retorno de Walpurgis
+Retroactive (film)
 Return (1985 film)
 The Return (2006 film)
 Return (2010 film)
@@ -12819,6 +12852,7 @@ Reversal of Fortune (2003 film)
 Revolt of the Zombies
 Revolution (1985 film)
 Revolution OS
+Revolution of Pigs
 The Revolution Will Not Be Televised (film)
 Revolutionary Road (film)
 Revolver (1973 film)
@@ -13026,8 +13060,8 @@ Room in Rome
 A Room for Romeo Brass
 Room Service (1938 film)
 Room Service (2007 film)
-Room at the Top
-A Room with a View (film)
+Room at the Top (1959 film)
+A Room with a View (1986 film)
 The Roommate
 The Roost
 Rooster Cogburn (film)
@@ -13130,7 +13164,6 @@ RV (film)
 Ryan's Daughter
 Raised from Dust
 Rembrandt (1999 film)
-Retroactive (film)
 The Right Way (film)
 S Diary
 S. Darko
@@ -13232,7 +13265,7 @@ Samurai Spy
 Samurai I: Musashi Miyamoto
 Samurai II: Duel at Ichijoji Temple
 Samurai III: Duel at Ganryu Island
-San Francisco (film)
+San Francisco (1936 film)
 Sanctum (film)
 The Sand Pebbles (film)
 Sanders of the River
@@ -13413,7 +13446,7 @@ Scott Pilgrim vs. the World
 The Scoundrel
 The Scout (film)
 Scratch (film)
-Scream (film)
+Scream (1996 film)
 Scream 2
 Scream 3
 Scream 4
@@ -13494,7 +13527,7 @@ Seducing Doctor Lewis
 The Seduction of Mimi
 Seduction: The Cruel Woman
 See No Evil (1971 film)
-See No Evil (film)
+See No Evil (2006 film)
 See No Evil, Hear No Evil
 See Spot Run
 Seed (2007 film)
@@ -13752,7 +13785,7 @@ The Shoes of the Fisherman
 Shoeshine (film)
 Shogun Assassin
 Sholay
-Shoot 'Em Up
+Shoot 'Em Up (film)
 Shoot to Kill (1988 film)
 Shoot the Moon (film)
 Shoot the Piano Player
@@ -13823,9 +13856,11 @@ Sidewalks of New York (film)
 Sideways
 The Siege
 Siegfried (film)
+Sigade revolutsioon
 The Signal (film)
 Signore & Signori
 Signs (film)
+Siin me oleme!
 Sikandar (1941 film)
 Sikandar (2009 film)
 The Silence (1963 film)
@@ -13895,6 +13930,7 @@ Singapore Dreaming
 Singin' in the Rain
 The Singing Detective (film)
 The Singing Fool
+The Singing Revolution
 A Single Man (film)
 Single White Female
 Singles (1992 film)
@@ -13937,7 +13973,6 @@ Skidoo (film)
 Skin (2008 film)
 Skin Deep (1989 film)
 The Skin Game (1931 film)
-Skin Gang
 The Skin I Live In
 Skinned Deep
 Skinwalkers (2002 film)
@@ -14076,11 +14111,11 @@ The Snow Creature
 Snow Day (film)
 Snow Dogs
 Snow Falling on Cedars (film)
-Snow White (1916 film)
-Snow White (1933 film)
 Sacrifice!
 The Scar Crow
 The Seventh Continent (1993 film)
+Snow White (1916 film)
+Snow White (1933 film)
 A Snow White Christmas
 Snow White and the Huntsman (film)
 Snow White and the Seven Dwarfs (1937 film)
@@ -14101,6 +14136,7 @@ So Undercover
 Soapdish
 The Social Network
 Society (film)
+Society Murders
 Sodom and Gomorrah (1922 film)
 Sodom and Gomorrah (1963 film)
 The Soft Skin (film)
@@ -14304,7 +14340,7 @@ Spider Baby
 The Spider and the Fly (1949 film)
 Spider Lilies (film)
 The Spider Woman
-Spider-Man (film)
+Spider-Man (2002 film)
 Spider-Man 2
 Spider-Man 3
 SpiderBabe
@@ -14679,6 +14715,7 @@ Sugar Hill (1974 film)
 Sugar Hill (1994 film)
 Sugar Town (film)
 The Sugarland Express
+Sügisball
 Suicide Club (film)
 Suicide Kings
 Suicide Manual
@@ -14794,6 +14831,7 @@ Suspect Zero
 Suspense (1946 film)
 Suspicion (1941 film)
 Suspiria
+Suur Tõll (film)
 Suzanne's Career
 Suzhou River (film)
 Suzie Gold
@@ -14851,7 +14889,7 @@ Swingers (1996 film)
 Swingers (2002 film)
 Swiss Family Robinson (1940 film)
 Swiss Family Robinson (film)
-Switch (film)
+Switch (1991 film)
 The Switch (1963 film)
 The Switch (2010 film)
 Switchback (film)
@@ -14877,7 +14915,6 @@ Syndromes and a Century
 Synecdoche, New York (film)
 The Syrian Bride
 Syriana
-Society Murders
 Spiders (film)
 Spy Kids: All The Time In The World
 T-Men
@@ -15061,6 +15098,7 @@ Temmink: The Ultimate Fight
 Tempest (1982 film)
 Temporada de patos
 Le Temps qui reste
+The Temptation of St. Tony
 Tempting Heart
 The Temptress
 Temptress Moon
@@ -15795,9 +15833,9 @@ Twin Dragons
 Twin Falls Idaho (film)
 Twin Peaks: Fire Walk with Me
 Twin Sisters (1934 film)
+Taking Chance (film)
 Twin Sisters (2002 film)
 Twin Town
-Taking Chance (film)
 Twinkle, Twinkle Lucky Stars
 Twins (1988 film)
 The Twins (film)
@@ -15861,11 +15899,13 @@ Un Coeur en Hiver
 Uchu Daikaijū Dogora
 Uchū no hōsoku
 Udaan (2010 film)
+Ūdensbumba resnajam runcim
 UFOria
 Ugetsu
 The Ugly
 The Ugly Truth (film)
 UHF (film)
+Üks mu sõber
 Ulee's Gold
 Ultimate Avengers (film)
 The Ultimate Gift
@@ -16144,6 +16184,7 @@ La Vie en rose (film)
 Vieuphoria
 View from the Top
 Vigilante (film)
+Viimne reliikvia
 The Viking (1928 film)
 The Vikings (film)
 Villa Zone
@@ -16414,6 +16455,7 @@ We Bought a Zoo
 We Don't Live Here Anymore
 We Faw Down
 We Have a Pope (film)
+We Lived for Estonia
 We Need to Talk About Kevin (film)
 We Own the Night
 We Were Soldiers
@@ -16579,7 +16621,7 @@ Where the Wild Things Are (film)
 Which Way to the Front?
 While the City Sleeps (1956 film)
 While She Was Out
-While You Were Sleeping
+While You Were Sleeping (film)
 The Whip and the Body
 Whip It (film)
 Whipped (film)
@@ -16613,7 +16655,7 @@ White Line Fever (film)
 White Man's Burden (film)
 White Material
 White Men Can't Jump
-White Mischief
+White Mischief (film)
 White Nights (1957 film)
 White Nights (1985 film)
 White Noise (film)
@@ -16803,13 +16845,13 @@ Witchfinder General (film)
 With Children at the Seaside
 With a Friend Like Harry...
 With Honors (film)
+Viu-hah hah-taja
+Water To Wine
+The Wedding Weekend
 With Six You Get Eggroll
 Within Our Gates
 Within the Woods
 Withnail and I
-Viu-hah hah-taja
-Water To Wine
-The Wedding Weekend
 Without a Clue
 Without Honor (1949 film)
 Without Limits
