@@ -34,8 +34,8 @@ func pageRank(pages []Page, walkProbability float64, convergenceCriteron float64
     // Single power iteration
     for i := 0; i < n; i++ {
       contribution := beta * lastRank[i] / float64(len(pages[i].Links))
-      for _, outboundId := range pages[i].Links {
-        thisRank[idRemap[outboundId]] += contribution
+      for _, link := range pages[i].Links {
+        thisRank[idRemap[link.PageId]] += contribution
       }
     }
 

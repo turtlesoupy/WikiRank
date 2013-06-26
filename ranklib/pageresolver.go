@@ -13,10 +13,6 @@ import (
   "io/ioutil"
 )
 
-const (
-  maxRedirects = 100
-)
-
 type CategoryResolver struct {
   CategoryName string
   PageResolver *PageResolver
@@ -28,69 +24,20 @@ type PageResolver struct {
   categoryResolvers []CategoryResolver
 }
 
-func reindexPages(pageMap map[uint64] *RankedPage, reindexMap map[uint64] int, allowDanglingRedirects bool) {
-  toDelete := make([]uint64, 0)
-  // Non-redirects
+func reindexPages(pageMap map[uint64] *RankedPage, reindexMap map[uint64] int) {
   for _, page := range pageMap {
-    if page.IsRedirect() {
-      continue // Handle after
-    }
     id := page.Id
-
     page.Id = uint64(reindexMap[id])
     for j := range page.Influencers {
       page.Influencers[j].Id = uint64(reindexMap[page.Influencers[j].Id])
     }
   }
-
-  //Redirects
-  for _, page := range pageMap {
-    if !page.IsRedirect() {
-      continue // Handled before
-    }
-
-    p := page
-    redirectCount := 0
-    for p.IsRedirect() && redirectCount < maxRedirects {
-      var ok bool
-      p, ok = pageMap[p.RedirectToId]
-      if !ok {
-        if allowDanglingRedirects {
-          redirectCount = maxRedirects
-          break
-        } else {
-          panic("We got a non-okay redirect")
-        }
-      }
-      redirectCount++
-    }
-
-    if p == nil {
-      toDelete = append(toDelete, page.Id)
-      continue
-    } else if redirectCount == maxRedirects {
-      toDelete = append(toDelete, page.Id)
-      log.Printf("Infinite redirect loop for %s", page)
-      continue;
-    }
-
-    page.Id = uint64(p.Id) // Already reindexed
-    for j := range page.Influencers {
-      page.Influencers[j].Id = uint64(reindexMap[page.Influencers[j].Id])
-    }
-  }
-
-  for _, id := range toDelete {
-    delete(pageMap, id)
-  }
 }
 
 func CreatePageResolver(inputFile string, limit int) (*PageResolver, error) {
   n := ReadLength(inputFile)
-  allowDanglingRedirects := false
   if n > limit {
     n = limit
-    allowDanglingRedirects = true
   }
 
 
@@ -101,19 +48,13 @@ func CreatePageResolver(inputFile string, limit int) (*PageResolver, error) {
   reindexMap := make(map[uint64] int, n)
 
   log.Printf("PageResolver: Reading ranked pages")
-  countNonRedirects := 0
   i := 0
   for page := range rpchan {
     pageById[page.Id] = page
-
-    if !page.IsRedirect() {
-      if _, ok := reindexMap[page.Id]; ok {
-        panic(fmt.Sprintf("Found existing page in reindex map %s", page))
-      }
-      reindexMap[page.Id] = countNonRedirects + 1
-      countNonRedirects++
+    if _, ok := reindexMap[page.Id]; ok {
+      panic(fmt.Sprintf("Found existing page in reindex map %s", page))
     }
-
+    reindexMap[page.Id] = i + 1
     i++
     if i >= n {
       break
@@ -121,19 +62,20 @@ func CreatePageResolver(inputFile string, limit int) (*PageResolver, error) {
   }
 
   log.Printf("PageResolver: Reindexing pages")
-  reindexPages(pageById, reindexMap, allowDanglingRedirects)
+  reindexPages(pageById, reindexMap)
 
   log.Printf("PageResolver: Creating Trie")
   trie := NewTrie()
-  rawPageList := make([]RankedPage, countNonRedirects, countNonRedirects)
+  rawPageList := make([]RankedPage, n, n)
   i = 0
   for _, startPage := range pageById {
     insertionValue := TrieValue{Id: startPage.Id, Rank: startPage.Rank}
     trie.AddEntry(normalizeTitle(startPage.Title), insertionValue)
-
-    if !startPage.IsRedirect() {
-      rawPageList[startPage.Id-1] = *startPage
+    for _, alias := range startPage.Aliases {
+      trie.AddEntry(normalizeTitle(alias), insertionValue)
     }
+
+    rawPageList[startPage.Id-1] = *startPage
 
     i++
     if i % 100000 == 0 && i > 0 {

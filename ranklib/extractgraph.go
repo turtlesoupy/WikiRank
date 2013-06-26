@@ -5,7 +5,6 @@ import (
   "io"
   "log"
   "fmt"
-  "bufio"
   "regexp"
   "strings"
   "encoding/xml"
@@ -17,7 +16,8 @@ const (
   readerBufferSize = 32 * 1024 * 1024
 )
 
-var titleFilter = regexp.MustCompile("^(File|Talk|Special|Wikipedia|Wiktionary|User|User Talk|Category|Portal|Template|Mediawiki):")
+
+var titleFilter = regexp.MustCompile("^(File|Talk|Special|Wikipedia|Wiktionary|User|User Talk|Category|Portal|Template|Mediawiki|Help):")
 
 type redirect struct {
   Title string `xml:"title,attr"`
@@ -30,16 +30,28 @@ type pageElement struct {
   Id uint64 `xml:"id"`
 }
 
+const (
+  hasCoordinate = iota << 1
+)
+
 type Page struct {
   Title string
   Id uint64
+  DumpId uint32 // Continuous id, unique for this dump
   Coordinate Coordinate
-  RedirectToId uint64
-  Links []uint64
+  Aliases []string
+  Links []Link
+  Flags uint32
 }
 
-func (page *Page) IsRedirect() bool {
-  return page.RedirectToId != 0
+
+type Link struct {
+  PageId uint64
+  Count uint32
+}
+
+func (page *Page) HasCoordinate() bool {
+  return page.Flags & hasCoordinate > 0
 }
 
 func (p *pageElement) String() string {
@@ -50,23 +62,24 @@ func yieldPageElements(fileName string, cp chan *pageElement) {
   xmlFile, err := os.Open(fileName)
   if(err != nil) { panic(err) }
 
-  var xmlReader io.Reader = bufio.NewReaderSize(xmlFile, readerBufferSize)
+  var xmlReader io.Reader
   if strings.HasSuffix(fileName, ".bz2") {
     log.Printf("Assuming bzip2 compressed dump")
-    xmlReader = bzip2.NewReader(xmlReader)
+    xmlReader = bzip2.NewReader(xmlFile)
   } else if strings.HasSuffix(fileName, ".gz") {
     log.Printf("Assuming gzip compressed dump")
-    xmlReader, err = gzip.NewReader(xmlReader)
+    xmlReader, err = gzip.NewReader(xmlFile)
   } else {
+    xmlReader = xmlFile
     log.Printf("Assuming uncompressed dump")
   }
 
-
-  if(err != nil) { panic(err) }
+  if err != nil { panic(err) }
 
   defer xmlFile.Close()
   defer close(cp)
 
+  pageCounter := 0
   log.Printf("Starting parse")
   decoder := xml.NewDecoder(xmlReader)
   for {
@@ -88,6 +101,10 @@ func yieldPageElements(fileName string, cp chan *pageElement) {
         if titleFilter.MatchString(p.Title) {
           continue
         }
+        pageCounter++
+        if pageCounter % 10000 == 0 {
+          log.Printf("Reached page %d", pageCounter)
+        }
         cp <- &p
       case "mediawiki":
       default:
@@ -98,72 +115,82 @@ func yieldPageElements(fileName string, cp chan *pageElement) {
   }
 }
 
-func newPage(pe *pageElement, titleIdMap map[string]uint64) *Page {
-  p := Page{Title: pe.Title, Id: pe.Id, RedirectToId: 0}
-  if len(pe.Redirect.Title) > 0 {
-    if redirectId, ok := titleIdMap[cleanSectionRegex.FindString(pe.Redirect.Title)]; ok {
-      p.RedirectToId = redirectId
+func ReadFrom(fileName string, outputName string) (err error) {
+  pages := make([]*Page, 0, 5000000)
+  pageTitleMap := make(map[string] *Page, 1200000)
+
+  log.Printf("Starting pass 1: pages")
+  pageInputChan := make(chan *pageElement, 1000)
+  go yieldPageElements(fileName, pageInputChan)
+  for pe := range pageInputChan {
+    if len(pe.Redirect.Title) == 0 {
+      p := &Page {Title: pe.Title, Id: pe.Id}
+      if c, ok := coordinatesFromWikiText(pe); ok {
+        p.Coordinate = c
+        p.Flags |= hasCoordinate
+      }
+      p.DumpId = uint32(len(pages))
+      pages = append(pages, p)
+      pageTitleMap[pe.Title] = p
     }
   }
 
-  dedupeLinks := make(map[uint64] bool)
-  submatches := linkRegex.FindAllStringSubmatch(pe.Text, -1)
-  p.Links = make([]uint64, 0, len(submatches))
-  for _, submatch := range submatches {
-    var dirtyLinkName string
-    if len(submatch[1]) == 0 {
-      dirtyLinkName = submatch[2]
-    } else {
-      dirtyLinkName = cleanSectionRegex.FindString(submatch[1])
-    }
-    if linkId, ok := titleIdMap[dirtyLinkName]; ok && linkId != p.Id {
-      if _, alreadySeen := dedupeLinks[linkId]; !alreadySeen {
-        dedupeLinks[linkId] = true
-        p.Links = append(p.Links, linkId)
+  log.Printf("Starting pass 2: redirects")
+  pageInputChan = make(chan *pageElement, 1000)
+  go yieldPageElements(fileName, pageInputChan)
+  for pe := range pageInputChan {
+    if len(pe.Redirect.Title) > 0 {
+      redirectedTitle := cleanSectionRegex.FindString(pe.Redirect.Title)
+      if redirectPage, ok := pageTitleMap[redirectedTitle]; ok {
+        redirectPage.Aliases = append(redirectPage.Aliases, pe.Title)
+        pageTitleMap[pe.Title] = redirectPage
+      } else if !titleFilter.MatchString(redirectedTitle) {
+        log.Printf("Unresolvable redirect: '%s' -> '%s' (cleaned '%s')", pe.Title, pe.Redirect.Title, redirectedTitle)
       }
     }
   }
 
-  if c, ok := coordinatesFromWikiText(pe); ok {
-    p.Coordinate = c
-  }
-
-  return &p
-}
-
-
-func ReadFrom(fileName string, outputName string) (err error) {
-  pageInputChan := make(chan *pageElement, 1000)
+  log.Printf("Starting pass 3: links")
+  pageInputChan = make(chan *pageElement, 1000)
   go yieldPageElements(fileName, pageInputChan)
+  for pe := range pageInputChan {
+    fromPage, ok := pageTitleMap[pe.Title]
+    if !ok {
+      if pe.Redirect.Title != "" {
+        log.Printf("Warning: page '%s' not in title map", pe.Title) // Errors only really matter in non-redirects
+      }
+      continue
+    }
 
-  titleIdMap := make(map[string]uint64, 12000000)
-  numPages := 0
-  log.Printf("Starting title pass")
-  // First pass: fill title id map
-  for page := range pageInputChan {
-    titleIdMap[page.Title] = page.Id
-    numPages++
-    newPage(page, titleIdMap)
+    linkCounts := make(map[uint64] uint32)
+    submatches := linkRegex.FindAllStringSubmatch(pe.Text, -1)
+    for _, submatch := range submatches {
+      var dirtyLinkName string
+      if len(submatch[1]) == 0 {
+        dirtyLinkName = submatch[2]
+      } else {
+        dirtyLinkName = cleanSectionRegex.FindString(submatch[1])
+      }
 
-    if numPages % 10000 == 0 {
-      log.Printf("Page #%d", numPages)
+      if toPage, ok := pageTitleMap[dirtyLinkName]; ok && toPage.Id != fromPage.Id {
+        linkCounts[toPage.Id]++
+      }
+    }
+
+    i := 0
+    fromPage.Links = make([]Link, len(linkCounts))
+    for linkedId, count := range linkCounts {
+      fromPage.Links[i] = Link{PageId: linkedId, Count: count}
+      i++
     }
   }
 
-  log.Printf("Done title pass, starting write pass")
-
-  pageInputChan = make(chan *pageElement, 1000)
+  log.Printf("Starting writing...")
   pageOutputChan := make(chan *Page, 1000)
   writeDoneChan := make(chan bool)
-  go yieldPageElements(fileName, pageInputChan)
-  go WritePages(outputName, numPages, pageOutputChan, writeDoneChan)
-  i := 0
-  for page := range pageInputChan {
-    pageOutputChan <- newPage(page, titleIdMap)
-    i++
-    if i % 10000 == 0 {
-      log.Printf("Page #%d", i)
-    }
+  go WritePages(outputName, len(pages), pageOutputChan, writeDoneChan)
+  for _, p := range pages {
+    pageOutputChan <- p
   }
   close(pageOutputChan)
   <-writeDoneChan

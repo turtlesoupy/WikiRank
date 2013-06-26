@@ -68,7 +68,8 @@ func WritePages(fileName string, numPages int, cp chan *Page, done chan bool) {
 
   for page := range cp {
     if(page != nil) {
-      gobEncoder.Encode(page)
+      err = gobEncoder.Encode(page)
+      if err != nil { panic(err) }
     } else {
       log.Printf("Null page while writing pages")
     }

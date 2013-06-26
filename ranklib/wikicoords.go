@@ -10,8 +10,8 @@ import (
 
 
 type Coordinate struct {
-  lat float64
-  long float64
+  Lat float64
+  Long float64
 }
 
 func mustCompileInfobox(key string) *regexp.Regexp {
@@ -72,7 +72,7 @@ func coordinateFromStrings(
     if strings.HasPrefix(longEW, "W") {
       longd *= -1
     }
-    return Coordinate{lat: latd, long: longd}, true
+    return Coordinate{Lat: latd, Long: longd}, true
 }
 
 func coordinateFromInfobox(pe *pageElement) (Coordinate, bool) {
@@ -102,7 +102,7 @@ func coordinateFromInfobox(pe *pageElement) (Coordinate, bool) {
   return coordinateFromStrings(latdString, latmString, latsString, latNS, longdString, longmString, longsString, longEW)
 }
 
-var middleBit = regexp.MustCompile("(?i){{coords? *[|](.*)?}}")
+var middleBit = regexp.MustCompile("(?i){{(?:coords?|coor d?m?s?2?) *[|](.*)?}}")
 func decimalCoordinate(wikiCoord string) (Coordinate, bool) {
   // See http://en.wikipedia.org/wiki/Template:Coord/doc/internals
   middle := middleBit.FindStringSubmatch(wikiCoord)
