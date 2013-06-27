@@ -37,7 +37,6 @@ const (
 type Page struct {
   Title string
   Id uint64
-  DumpId uint32 // Continuous id, unique for this dump
   Coordinate Coordinate
   Aliases []string
   Links []Link
@@ -116,19 +115,18 @@ func yieldPageElements(fileName string, cp chan *pageElement) {
 
 func ReadFrom(fileName string, outputName string) (err error) {
   pages := make([]*Page, 0, 5000000)
-  pageTitleMap := make(map[string] *Page, 1200000)
+  pageTitleMap := make(map[string] *Page, 12000000)
 
   log.Printf("Starting pass 1: pages")
   pageInputChan := make(chan *pageElement, 1000)
   go yieldPageElements(fileName, pageInputChan)
   for pe := range pageInputChan {
     if len(pe.Redirect.Title) == 0 {
-      p := &Page {Title: pe.Title, Id: pe.Id}
+      p := &Page {Title: pe.Title, Id: pe.Id, Links: make([]Link, 0, 10)}
       if c, ok := coordinatesFromWikiText(pe); ok {
         p.Coordinate = c
         p.Flags |= hasCoordinate
       }
-      p.DumpId = uint32(len(pages))
       pages = append(pages, p)
       pageTitleMap[pe.Title] = p
     }
@@ -176,11 +174,8 @@ func ReadFrom(fileName string, outputName string) (err error) {
       }
     }
 
-    i := 0
-    fromPage.Links = make([]Link, len(linkCounts))
     for linkedId, count := range linkCounts {
-      fromPage.Links[i] = Link{PageId: linkedId, Count: count}
-      i++
+      fromPage.Links = append(fromPage.Links, Link{PageId: linkedId, Count: count})
     }
   }
 

@@ -7,8 +7,8 @@ import (
 )
 
 const (
-  pageRankWalkProbability = 0.85
-  pageRankConvergence = 0.0001
+  PageRankWalkProbability = 0.85
+  PageRankConvergence = 0.0001
 )
 
 type RankedPage struct {
@@ -47,11 +47,14 @@ func RankAndWrite(inputName string, outputName string) (err error) {
   i := 0
   for page := range inputChan {
     pageList[i] = *page
+    if(pageList[i].Title == "The Wizard of Oz (1939 film)") {
+      log.Printf("%s: %q", pageList[i].Title, pageList[i].Links)
+    }
     i++
   }
 
   log.Printf("Computing PageRank...")
-  rankVector := pageRank(pageList, pageRankWalkProbability, pageRankConvergence)
+  rankVector := pageRank(pageList, PageRankWalkProbability, PageRankConvergence)
 
   log.Printf("Converting to ranked pages...")
   rankList := make([]RankedPage, n)
@@ -61,6 +64,9 @@ func RankAndWrite(inputName string, outputName string) (err error) {
       Page: *page,
       Rank: float32(rankVector[i]),
       OutboundCount: uint32(len(page.Links)),
+    }
+    if(rankList[i].Title == "The Wizard of Oz (1939 film)") {
+      log.Printf("%s: %q", rankList[i], rankList[i].Links)
     }
   }
 
