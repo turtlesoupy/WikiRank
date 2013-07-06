@@ -7,6 +7,7 @@ import (
   "fmt"
   "regexp"
   "strings"
+  "strconv"
   "encoding/xml"
   "compress/bzip2"
   "compress/gzip"
@@ -41,6 +42,7 @@ type Page struct {
   Aliases []string
   Links []Link
   Flags uint32
+  ReleaseYear int32
 }
 
 type Link struct {
@@ -113,12 +115,30 @@ func yieldPageElements(fileName string, cp chan *pageElement) {
   }
 }
 
+var filmDateInfoboxR = regexp.MustCompile(fmt.Sprintf(`(?i)[|] *(released) *= ({{.*?}})`))
+var yearR = regexp.MustCompile(`\d\d\d\d`)
+func releaseYearFromWikiText(pe *pageElement) (int32, bool) {
+  releaseString := extractFromInfobox(pe.Text, filmDateInfoboxR)
+  if releaseString == "" {
+    return -1, false
+  }
+
+  releaseYearString := yearR.FindString(releaseString)
+  releaseYear, err := strconv.Atoi(releaseYearString)
+  if err != nil {
+    log.Printf("Error converting release year for '%s' in '%q'", pe.Title, releaseYear)
+    return -1, false
+  }
+
+  return int32(releaseYear), true
+}
+
 func ReadFrom(fileName string, outputName string) (err error) {
   pages := make([]*Page, 0, 5000000)
   pageTitleMap := make(map[string] *Page, 12000000)
 
   log.Printf("Starting pass 1: pages")
-  pageInputChan := make(chan *pageElement, 1000)
+  pageInputChan := make(chan *pageElement, 20000)
   go yieldPageElements(fileName, pageInputChan)
   for pe := range pageInputChan {
     if len(pe.Redirect.Title) == 0 {
@@ -127,6 +147,13 @@ func ReadFrom(fileName string, outputName string) (err error) {
         p.Coordinate = c
         p.Flags |= hasCoordinate
       }
+
+      if c, ok := releaseYearFromWikiText(pe); ok {
+        p.ReleaseYear = c
+      } else {
+        p.ReleaseYear = -1
+      }
+
       pages = append(pages, p)
       pageTitleMap[pe.Title] = p
     }

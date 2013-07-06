@@ -32,14 +32,20 @@ func (s CategoryPageList) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 type DumpConfig struct {
   NumInfluencers int
   NumItems int
+  IncludeAliases bool
+  IncludeReleaseYear bool
   CaseSensitive bool
+  PrettyPrint bool
 }
 
 func DefaultDumpConfig() DumpConfig {
   return DumpConfig{
     NumInfluencers: -1,
     NumItems: -1,
+    IncludeAliases: false,
     CaseSensitive: true,
+    IncludeReleaseYear: false,
+    PrettyPrint: true,
   }
 }
 
@@ -53,8 +59,8 @@ func normalizedTitle(dumpConfig DumpConfig, t string) string {
 
 func DumpCategory(rankedPageFile string, categoryFile string, outputFile string) error {
   dumpConfig := DefaultDumpConfig()
-  dumpConfig.NumItems = 25
-  dumpConfig.NumInfluencers = 10
+  dumpConfig.IncludeReleaseYear = true
+  dumpConfig.PrettyPrint = false
 
   rpchan := make(chan *RankedPage, 1000)
   categoryPages := make(map[uint64] *CategoryPage, 1000)
@@ -114,15 +120,36 @@ func sortAndWrite(dumpConfig DumpConfig, categoryPages map[uint64] *CategoryPage
       })
     }
 
-    jsonList = append(jsonList, map[string] interface{} {
+    jsonObject := map[string] interface{} {
       "title": categoryPage.Title,
       "pageRank": float64(categoryPage.Rank) / totalRank, // conditional pageRank
       "position": i+1,
-      "influencers": influencersJson,
-    })
+    }
+
+    if dumpConfig.NumInfluencers > 0 {
+      jsonObject["influencers"] = influencersJson
+    }
+
+    if dumpConfig.IncludeAliases {
+      jsonObject["aliases"] = categoryPage.Aliases
+    }
+    if dumpConfig.IncludeReleaseYear {
+      jsonObject["releaseYear"] = categoryPage.ReleaseYear
+    }
+
+    jsonList = append(jsonList, jsonObject)
   }
 
-  if data, err := json.MarshalIndent(jsonList, "", "\t"); err != nil {
+
+  var data []byte
+  var err error
+  if dumpConfig.PrettyPrint {
+    data, err = json.MarshalIndent(jsonList, "", "\t")
+  } else {
+    data, err = json.Marshal(jsonList)
+  }
+
+  if err != nil {
     return err
   } else {
     return ioutil.WriteFile(outputFile, data, 0755)
@@ -130,6 +157,10 @@ func sortAndWrite(dumpConfig DumpConfig, categoryPages map[uint64] *CategoryPage
 }
 
 func computeCategoryPageMetrics(dumpConfig DumpConfig, categoryPages map[uint64] *CategoryPage) {
+  if dumpConfig.NumInfluencers <= 0 {
+    return
+  }
+
   for _, categoryPage := range categoryPages {
     for _, link := range categoryPage.Links {
       if linkedPage, ok := categoryPages[link.PageId]; ok {

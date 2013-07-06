@@ -37,7 +37,7 @@ var longMR = mustCompileInfobox("(longm|long_m|long_minutes|longminutes)")
 var longSR = mustCompileInfobox("(longs|long_s|long_seconds|longseconds)")
 var longEWR = mustCompileInfobox("(longEW|long_EW|long_direction|longdirection)")
 
-var coordInfoboxR = regexp.MustCompile(fmt.Sprintf(`(?i)[|] *(coordinates|coord|coordinate) *= ({{.*?}})`))
+var coordInfoboxR = regexp.MustCompile(fmt.Sprintf(`(?i)[|] *(coordinates|coord|coordinate) *= *({{.*?}})`))
 
 func optionalFloat(s string) (float64, error) {
   // ParseFloat returns non-nil error when it can't parse. Empty string is not an error here.

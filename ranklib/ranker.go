@@ -47,9 +47,6 @@ func RankAndWrite(inputName string, outputName string) (err error) {
   i := 0
   for page := range inputChan {
     pageList[i] = *page
-    if(pageList[i].Title == "The Wizard of Oz (1939 film)") {
-      log.Printf("%s: %q", pageList[i].Title, pageList[i].Links)
-    }
     i++
   }
 
@@ -64,9 +61,6 @@ func RankAndWrite(inputName string, outputName string) (err error) {
       Page: *page,
       Rank: float32(rankVector[i]),
       OutboundCount: uint32(len(page.Links)),
-    }
-    if(rankList[i].Title == "The Wizard of Oz (1939 film)") {
-      log.Printf("%s: %q", rankList[i], rankList[i].Links)
     }
   }
 
