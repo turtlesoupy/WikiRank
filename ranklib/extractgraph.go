@@ -115,7 +115,7 @@ func yieldPageElements(fileName string, cp chan *pageElement) {
   }
 }
 
-var filmDateInfoboxR = regexp.MustCompile(fmt.Sprintf(`(?i)[|] *(released) *= ({{.*?}})`))
+var filmDateInfoboxR = regexp.MustCompile(fmt.Sprintf(`(?i)[|] *(released) *= (.*?)`))
 var yearR = regexp.MustCompile(`\d\d\d\d`)
 func releaseYearFromWikiText(pe *pageElement) (int32, bool) {
   releaseString := extractFromInfobox(pe.Text, filmDateInfoboxR)
@@ -142,7 +142,11 @@ func ReadFrom(fileName string, outputName string) (err error) {
   go yieldPageElements(fileName, pageInputChan)
   for pe := range pageInputChan {
     if len(pe.Redirect.Title) == 0 {
+      wikiParser := NewWikiParser(pe)
+      wikiParser.ParseInfobox()
+
       p := &Page {Title: pe.Title, Id: pe.Id, Links: make([]Link, 0, 10)}
+
       if c, ok := coordinatesFromWikiText(pe); ok {
         p.Coordinate = c
         p.Flags |= hasCoordinate

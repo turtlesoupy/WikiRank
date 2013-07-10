@@ -59,8 +59,9 @@ func normalizedTitle(dumpConfig DumpConfig, t string) string {
 
 func DumpCategory(rankedPageFile string, categoryFile string, outputFile string) error {
   dumpConfig := DefaultDumpConfig()
-  dumpConfig.IncludeReleaseYear = true
-  dumpConfig.PrettyPrint = false
+  dumpConfig.IncludeReleaseYear = false
+  dumpConfig.IncludeAliases = true
+  dumpConfig.PrettyPrint = true
 
   rpchan := make(chan *RankedPage, 1000)
   categoryPages := make(map[uint64] *CategoryPage, 1000)

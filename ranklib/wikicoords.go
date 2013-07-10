@@ -172,7 +172,6 @@ func decimalCoordinate(wikiCoord string) (Coordinate, bool) {
   return coordinateFromStrings(latdString, latmString, latsString, latNS, longdString, longmString, longsString, longEW)
 }
 
-var linkRegex = regexp.MustCompile(`\[\[(?:([^|\]]*)\|)?([^\]]+)\]\]`)
 var cleanSectionRegex = regexp.MustCompile(`^[^#]*`)
 var coordinateRegex = regexp.MustCompile(`(?i){{coord(.*?)}}`)
 

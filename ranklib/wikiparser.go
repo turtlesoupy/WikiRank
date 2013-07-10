@@ -7,6 +7,36 @@ import (
   "strings"
 )
 
+type WikiParser struct {
+  pageTitle string
+  cleanedText string
+}
+
+var removeComments = regexp.MustCompile(`<!--(.*?)-->`)
+func NewWikiParser(pe *pageElement) *WikiParser {
+  p := &WikiParser{}
+  p.pageTitle = pe.Title
+  p.cleanedText = removeComments.ReplaceAllLiteralString(pe.Text, "")
+  return p
+}
+
+var linkRegex = regexp.MustCompile(`\[\[(?:([^|\]]*)\|)?([^\]]+)\]\]`)
+func (this *WikiParser) ParseTextLinks() []string {
+  links := make([]string, 100)
+  submatches := linkRegex.FindAllStringSubmatch(this.cleanedText, -1)
+  for _, submatch := range submatches {
+    var realLinkName string
+    if len(submatch[1]) == 0 {
+      realLinkName = submatch[2]
+    } else {
+      realLinkName = cleanSectionRegex.FindString(submatch[1])
+    }
+    links = append(links, realLinkName)
+  }
+
+  return links
+}
+
 type scanState uint8
 const (
   _ = iota
@@ -20,17 +50,14 @@ type parsedInfobox struct {
   Attributes map[string] string
 }
 
-var infoboxStart = regexp.MustCompile(`(?i){{ *Infobox *([^|}=]*)`)
-var removeComments = regexp.MustCompile(`<!--(.*?)-->`)
-func parseInfobox(pe *pageElement) *parsedInfobox {
-  text := removeComments.ReplaceAllLiteralString(pe.Text, "")
-
-  infoboxMatches := infoboxStart.FindStringSubmatchIndex(text)
+var infoboxStartR = regexp.MustCompile(`(?i){{ *Infobox *([^|}=]*)`)
+func (this *WikiParser) ParseInfobox() *parsedInfobox {
+  infoboxMatches := infoboxStartR.FindStringSubmatchIndex(this.cleanedText)
   if len(infoboxMatches) == 0 {
     return nil
   }
 
-  subject := strings.TrimSpace(text[infoboxMatches[2]:infoboxMatches[3]])
+  subject := strings.TrimSpace(this.cleanedText[infoboxMatches[2]:infoboxMatches[3]])
   ret := &parsedInfobox{InfoboxType: subject, Attributes: make(map[string] string)}
 
   // Don't try this at home
@@ -69,7 +96,7 @@ func parseInfobox(pe *pageElement) *parsedInfobox {
     buffer.Reset()
   }
 
-  for _, c := range text[infoboxMatches[3]:] {
+  for _, c := range this.cleanedText[infoboxMatches[3]:] {
     if state == IN_KEY || state == IN_VALUE {
       buffer.WriteRune(c)
     }
@@ -103,6 +130,6 @@ func parseInfobox(pe *pageElement) *parsedInfobox {
     }
   }
 
-  log.Printf("%s %s", pe.Title, ret)
+  log.Printf("%s !! %s", this.pageTitle, ret)
   return ret
 }
