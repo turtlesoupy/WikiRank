@@ -1,27 +1,61 @@
 package ranklib
 
 import (
-  "log"
   "bytes"
   "regexp"
   "strings"
 )
 
 type WikiParser struct {
-  pageTitle string
+  pe *pageElement
   cleanedText string
+}
+
+type ParsedPage struct {
+  Title string
+  Id uint64
+  RedirectTo string
+  Infobox *ParsedInfobox
+  LanguageTitles map[string] string
+  TextLinks []string
 }
 
 var removeComments = regexp.MustCompile(`<!--(.*?)-->`)
 func NewWikiParser(pe *pageElement) *WikiParser {
-  p := &WikiParser{}
-  p.pageTitle = pe.Title
-  p.cleanedText = removeComments.ReplaceAllLiteralString(pe.Text, "")
+  p := &WikiParser{
+    pe: pe,
+    cleanedText: removeComments.ReplaceAllLiteralString(pe.Text, ""),
+  }
   return p
 }
 
+func (this *WikiParser) ParseOut() *ParsedPage {
+  ret := &ParsedPage {
+    Title: this.pe.Title,
+    Id: this.pe.Id,
+    RedirectTo: this.pe.Redirect.Title,
+    Infobox: this.parseInfobox(),
+    LanguageTitles: this.parseInterlanguagePageTitles(),
+    TextLinks: this.parseTextLinks(),
+  }
+  return ret
+}
+
+var interlanguageR = regexp.MustCompile(`\[\[(en|nl|de|fr|sv|it|es|ru):(.*?)\]\]`)
+func (this *WikiParser) parseInterlanguagePageTitles() map[string] string {
+  ret := make(map[string] string)
+  submatches := interlanguageR.FindAllStringSubmatch(this.cleanedText, -1)
+  for _, submatch := range submatches {
+    language := submatch[1]
+    title := submatch[2]
+    ret[language] = title
+  }
+
+  return ret
+}
+
 var linkRegex = regexp.MustCompile(`\[\[(?:([^|\]]*)\|)?([^\]]+)\]\]`)
-func (this *WikiParser) ParseTextLinks() []string {
+func (this *WikiParser) parseTextLinks() []string {
   links := make([]string, 100)
   submatches := linkRegex.FindAllStringSubmatch(this.cleanedText, -1)
   for _, submatch := range submatches {
@@ -45,20 +79,20 @@ const (
   IN_VALUE
 )
 
-type parsedInfobox struct {
+type ParsedInfobox struct {
   InfoboxType string
   Attributes map[string] string
 }
 
 var infoboxStartR = regexp.MustCompile(`(?i){{ *Infobox *([^|}=]*)`)
-func (this *WikiParser) ParseInfobox() *parsedInfobox {
+func (this *WikiParser) parseInfobox() *ParsedInfobox {
   infoboxMatches := infoboxStartR.FindStringSubmatchIndex(this.cleanedText)
   if len(infoboxMatches) == 0 {
     return nil
   }
 
   subject := strings.TrimSpace(this.cleanedText[infoboxMatches[2]:infoboxMatches[3]])
-  ret := &parsedInfobox{InfoboxType: subject, Attributes: make(map[string] string)}
+  ret := &ParsedInfobox{InfoboxType: subject, Attributes: make(map[string] string)}
 
   // Don't try this at home
   var state scanState = NONE
@@ -130,6 +164,6 @@ func (this *WikiParser) ParseInfobox() *parsedInfobox {
     }
   }
 
-  log.Printf("%s !! %s", this.pageTitle, ret)
+  //log.Printf("%s !! %s", this.pageTitle, ret)
   return ret
 }

@@ -82,6 +82,19 @@ func main() {
     log.Printf("Extracting from '%s' into '%s'", filename, outputName)
     err := ranklib.ReadFrom(filename, outputName)
     if err != nil { panic(err) }
+
+  case "preprocess_xml":
+    if len(os.Args) <= 3 {
+      log.Fatal("Preprocess: required argument 'input.xml' / 'output.gob' missing")
+      return
+    }
+
+    xmlFileName := os.Args[2]
+    outputName := os.Args[3]
+
+    log.Printf("Preprocessing '%s' into '%s'", xmlFileName, outputName)
+    err := ranklib.PreprocessXML(xmlFileName, outputName)
+    if err != nil { panic(err) }
   default:
     log.Fatalf("Unknown command '%s'", cmd)
     return
