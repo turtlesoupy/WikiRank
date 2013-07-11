@@ -3,6 +3,7 @@ package ranklib
 import (
   "encoding/gob"
   "os"
+  "io"
   "log"
 )
 
@@ -58,6 +59,25 @@ func ReadRankedPages(fileName string, cp chan *RankedPage) {
   }
 }
 
+func ReadPreprocessedPages(fileName string, cp chan *PreprocessedPage) {
+  defer close(cp)
+  f, err := os.Open(fileName)
+  if err != nil { panic(err) }
+  defer f.Close()
+
+  gobDecoder := gob.NewDecoder(f)
+  for {
+    var page PreprocessedPage
+    err := gobDecoder.Decode(&page)
+    if err == io.EOF {
+      break
+    } else if err != nil {
+      panic(err)
+    }
+    cp <- &page
+  }
+}
+
 func WritePages(fileName string, numPages int, cp chan *Page, done chan bool) {
   outputFile, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
   if err != nil { panic(err) }
@@ -90,6 +110,22 @@ func WriteRankedPages(fileName string, numPages int, cp chan *RankedPage, done c
       gobEncoder.Encode(rp)
     } else {
       log.Printf("Null page while writing ranked pages")
+    }
+  }
+  done <- true
+}
+
+func WritePreprocessedPages(fileName string, cp chan *PreprocessedPage, done chan bool) {
+  outputFile, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+  if err != nil { panic(err) }
+  defer outputFile.Close()
+
+  gobEncoder := gob.NewEncoder(outputFile)
+  for rp := range cp {
+    if rp != nil {
+      gobEncoder.Encode(rp)
+    } else {
+      log.Printf("Null page while writing parsed pages")
     }
   }
   done <- true
