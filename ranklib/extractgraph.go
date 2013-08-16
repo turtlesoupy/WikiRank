@@ -24,13 +24,6 @@ type redirect struct {
   Title string `xml:"title,attr"`
 }
 
-type pageElement struct {
-  Title string `xml:"title"`
-  Redirect redirect `xml:"redirect"`
-  Text string `xml:"revision>text"`
-  Id uint64 `xml:"id"`
-}
-
 const (
   hasCoordinate = iota << 1
 )

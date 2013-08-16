@@ -17,6 +17,7 @@ type PreprocessedPage struct {
   Id uint64
   RedirectTo string
   Infobox *ParsedInfobox
+  Coordinate Coordinate
   LanguageTitles map[string] string
   TextLinks []ParsedTextLink
 }
@@ -31,9 +32,17 @@ type ParsedTextLink struct {
   Count uint32
 }
 
+type pageElement struct {
+  Title string `xml:"title"`
+  Redirect redirect `xml:"redirect"`
+  Text string `xml:"revision>text"`
+  Id uint64 `xml:"id"`
+}
+
 type wikiParser struct {
   pe *pageElement
   cleanedText string
+  parsedInfobox *ParsedInfobox
 }
 
 func PreprocessXML(inputFile string, outputFile string) error {
@@ -43,13 +52,8 @@ func PreprocessXML(inputFile string, outputFile string) error {
 
   go yieldPageElementsFromFile(inputFile, pageInputChan)
   go WritePreprocessedPages(outputFile, pageOutputChan, writeDoneChan)
-  i := 0
   for pe := range pageInputChan {
     pageOutputChan <- parseXMLPageElement(pe)
-    i++
-    if i % 10000 == 0 {
-      log.Printf("Reached page %d", i)
-    }
   }
   close(pageOutputChan)
   <-writeDoneChan
@@ -65,11 +69,14 @@ func parseXMLPageElement(pe *pageElement) *PreprocessedPage {
     cleanedText: removeComments.ReplaceAllLiteralString(pe.Text, ""),
   }
 
+  coord, _ := parser.parseCoordinate();
+
   ret := &PreprocessedPage{
     Title: pe.Title,
     Id: pe.Id,
     RedirectTo: pe.Redirect.Title,
     Infobox: parser.parseInfobox(),
+    Coordinate: coord,
     LanguageTitles: parser.parseInterlanguagePageTitles(),
     TextLinks: parser.parseTextLinks(),
   }
@@ -111,6 +118,21 @@ func (this *wikiParser) parseTextLinks() []ParsedTextLink {
   return links
 }
 
+func (this *wikiParser) parseCoordinate() (Coordinate, bool) {
+  if coord, ok := coordFromWikiText(this.pe.Title, this.cleanedText); ok {
+    return coord, true
+  }
+
+  infobox := this.parseInfobox()
+  if infobox != nil {
+    if coord, ok := coordFromParsedInfobox(this.pe.Title, infobox); ok {
+      return coord, true
+    }
+  }
+
+  return Coordinate{}, false
+}
+
 type scanState uint8
 const (
   _ = iota
@@ -122,6 +144,10 @@ const (
 
 var infoboxStartR = regexp.MustCompile(`(?i){{ *Infobox *([^|}=]*)`)
 func (this *wikiParser) parseInfobox() *ParsedInfobox {
+  if this.parsedInfobox != nil {
+    return this.parsedInfobox
+  }
+
   infoboxMatches := infoboxStartR.FindStringSubmatchIndex(this.cleanedText)
   if len(infoboxMatches) == 0 {
     return nil
@@ -199,10 +225,19 @@ func (this *wikiParser) parseInfobox() *ParsedInfobox {
       }
     }
   }
-
+  this.parsedInfobox = ret
   return ret
 }
 
+func (this *ParsedInfobox) anyOf(keys []string, defaultVal string) (string, bool) {
+  for _, k := range keys {
+    if val, ok := this.Attributes[k]; ok {
+      return val, true
+    }
+  }
+
+  return defaultVal, false
+}
 
 func yieldPageElementsFromFile(fileName string, cp chan *pageElement) {
   xmlFile, err := os.Open(fileName)

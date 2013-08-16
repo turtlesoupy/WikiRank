@@ -192,3 +192,56 @@ func coordinatesFromWikiText(pe *pageElement) (Coordinate, bool) {
 
   return Coordinate{}, false
 }
+
+func coordFromWikiText(title string, text string) (Coordinate, bool) {
+  coordinateText := coordinateRegex.FindString(text)
+  if coordinateText != "" && strings.Contains(coordinateText, "title") && !strings.Contains(coordinateText, "LAT") {
+    if coord, ok := decimalCoordinate(coordinateText); ok {
+      return coord, ok
+    }
+    log.Printf("Error in wiki coord from text extraction in '%s'", title)
+  }
+
+  return Coordinate{}, false
+}
+
+func coordFromParsedInfobox(title string, infoBox *ParsedInfobox) (Coordinate, bool) {
+  // First try plain coordinate templates
+  if coordTemplate, ok := infoBox.anyOf([]string {"coordinates", "coord", "coordinate"}, ""); ok {
+    c, ok := decimalCoordinate(coordTemplate)
+    if ok {
+      return c, true
+    } else {
+      log.Printf("Weird coordinate in '%s' infobox - %s", title, coordTemplate)
+    }
+  }
+
+  // Try a full extraction
+  latdString, ok := infoBox.anyOf([]string {"latd", "lat_d", "lat_degrees", "latdegrees"}, "")
+  if !ok {
+    return Coordinate{}, false
+  }
+
+  longdString, ok := infoBox.anyOf([]string {"longd", "long_d", "long_degrees", "longdegrees"}, "")
+  if !ok {
+    return Coordinate{}, false
+  }
+
+  // optional
+  latmString, _  := infoBox.anyOf([]string {"latm", "lat_m", "lat_minutes", "latminutes"}, "")
+  latsString, _  := infoBox.anyOf([]string {"lats", "lat_s", "lat_seconds", "latseconds"}, "")
+  latnsString, _ := infoBox.anyOf([]string {"latNS", "lat_NS", "lat_direction", "latdirection"}, "")
+
+  longmString, _  := infoBox.anyOf([]string {"longm", "long_m", "long_minutes", "longminutes"}, "")
+  longsString, _  := infoBox.anyOf([]string {"longs", "long_s", "long_seconds", "longseconds"}, "")
+  longewString, _ := infoBox.anyOf([]string {"longEW", "long_EW", "long_direction", "longdirection"}, "")
+
+  if ret, ok := coordinateFromStrings(latdString, latmString, latsString, latnsString, longdString, longmString, longsString, longewString); ok {
+    return ret, true
+  }
+
+  log.Printf("Weird coordinate extraction in '%s' - latd=%s,latm=%s,lats=%s,latns=%s,longd=%s,longm=%s,longs=%s,longew=%s",
+             title, latdString, latmString, latsString, latnsString, longdString, longmString, longsString, longewString)
+
+  return Coordinate{}, false
+}
