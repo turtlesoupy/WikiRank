@@ -12,9 +12,11 @@ import (
   "strings"
 )
 
+type WikiIdType uint64
+
 type PreprocessedPage struct {
   Title string
-  Id uint64
+  Id WikiIdType
   RedirectTo string
   Infobox *ParsedInfobox
   Coordinate Coordinate
@@ -73,7 +75,7 @@ func parseXMLPageElement(pe *pageElement) *PreprocessedPage {
 
   ret := &PreprocessedPage{
     Title: pe.Title,
-    Id: pe.Id,
+    Id: WikiIdType(pe.Id),
     RedirectTo: pe.Redirect.Title,
     Infobox: parser.parseInfobox(),
     Coordinate: coord,

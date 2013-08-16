@@ -95,6 +95,17 @@ func main() {
     log.Printf("Preprocessing '%s' into '%s'", xmlFileName, outputName)
     err := ranklib.PreprocessXML(xmlFileName, outputName)
     if err != nil { panic(err) }
+  case "rank_preprocessed":
+    if len(os.Args) <= 3 {
+      log.Fatal("Rank: required argument 'input.gob' / 'output.gob' missing")
+      return
+    }
+
+    inputFile := os.Args[2]
+    outputFile := os.Args[3]
+    log.Printf("Ranking from '%s' into '%s'", inputFile, outputFile)
+    err := ranklib.PageRankPreprocessedPages(inputFile, outputFile)
+    if err != nil { panic(err) }
   default:
     log.Fatalf("Unknown command '%s'", cmd)
     return
