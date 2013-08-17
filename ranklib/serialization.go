@@ -130,3 +130,19 @@ func WritePreprocessedPages(fileName string, cp chan *PreprocessedPage, done cha
   }
   done <- true
 }
+
+func WritePageRankedArticles(fileName string, cp chan *PageRankedArticle, done chan bool) {
+  outputFile, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+  if err != nil { panic(err) }
+  defer outputFile.Close()
+
+  gobEncoder := gob.NewEncoder(outputFile)
+  for rp := range cp {
+    if rp != nil {
+      gobEncoder.Encode(rp)
+    } else {
+      log.Printf("Null page while writing parsed pages")
+    }
+  }
+  done <- true
+}

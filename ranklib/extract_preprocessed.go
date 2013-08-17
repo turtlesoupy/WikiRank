@@ -4,6 +4,12 @@ import (
   "log"
 )
 
+type PageRankedArticle struct {
+  PageRank float64
+  Aliases []string
+  PreprocessedPage
+}
+
 func PageRankPreprocessedPages(inputName string, outputName string) (err error) {
   sequentialIdMap := make(map[string] uint32, 600000)
   redirectTitleMap := make(map[string] string, 6000000)
@@ -63,7 +69,19 @@ func PageRankPreprocessedPages(inputName string, outputName string) (err error) 
     }
   }
 
+
   sequentialIdMap = nil
+  aliasMap := make(map[string] []string, sequentialId)
+  for redirectFrom, redirectTo := range redirectTitleMap {
+    if aliases, ok := aliasMap[redirectTo]; ok {
+      aliasMap[redirectTo] = append(aliases, redirectFrom)
+    } else {
+      l := make([]string, 1, 1)
+      l = append(l, redirectFrom)
+      aliasMap[redirectTo] = l
+    }
+  }
+  redirectTitleMap = nil
 
   // Output cool data format
   log.Printf("Page ranking...")
@@ -72,8 +90,10 @@ func PageRankPreprocessedPages(inputName string, outputName string) (err error) 
   g = Graph{}
   nodes = nil
 
-  log.Printf("Outputting data...")
+  log.Printf("Outputting data into '%s'...", outputName)
   preprocessedPageInputChannel = make(chan *PreprocessedPage, 20000)
+  pageOutputChan := make(chan *PageRankedArticle, 20000)
+  writeDoneChan := make(chan bool)
   sequentialId = 0
   go ReadPreprocessedPages(inputName, preprocessedPageInputChannel)
   for pp := range preprocessedPageInputChannel {
@@ -82,13 +102,20 @@ func PageRankPreprocessedPages(inputName string, outputName string) (err error) 
     }
 
     pageRank := rankVector[sequentialId]
-    log.Printf("Page rank: %f", pageRank)
+    article := &PageRankedArticle{
+      PreprocessedPage: *pp,
+      PageRank: pageRank,
+      Aliases: aliasMap[pp.Title],
+    }
+    pageOutputChan <- article
 
     sequentialId++
     if sequentialId % 10000 == 0 {
       log.Printf("Page %d", sequentialId)
     }
   }
+  close(pageOutputChan)
+  <-writeDoneChan
 
   return
 }
