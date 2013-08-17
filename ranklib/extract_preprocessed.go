@@ -57,7 +57,7 @@ func PageRankPreprocessedPages(inputName string, outputName string) (err error) 
       } else {
         linkId, ok = sequentialIdMap[linkTitle]
         if !ok {
-          log.Printf("Bad link in '%s': '%s'", pp.Title, linkTitle)
+          //log.Printf("Bad link in '%s': '%s'", pp.Title, linkTitle)
           continue
         }
       }

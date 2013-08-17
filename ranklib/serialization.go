@@ -78,6 +78,25 @@ func ReadPreprocessedPages(fileName string, cp chan *PreprocessedPage) {
   }
 }
 
+func ReadPageRankedArticles(fileName string, cp chan *PageRankedArticle) {
+  defer close(cp)
+  f, err := os.Open(fileName)
+  if err != nil { panic(err) }
+  defer f.Close()
+
+  gobDecoder := gob.NewDecoder(f)
+  for {
+    var page PageRankedArticle
+    err := gobDecoder.Decode(&page)
+    if err == io.EOF {
+      break
+    } else if err != nil {
+      panic(err)
+    }
+    cp <- &page
+  }
+}
+
 func WritePages(fileName string, numPages int, cp chan *Page, done chan bool) {
   outputFile, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
   if err != nil { panic(err) }
