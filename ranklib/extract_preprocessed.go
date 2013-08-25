@@ -2,12 +2,28 @@ package ranklib
 
 import (
   "log"
+  "encoding/gob"
+  "github.com/cosbynator/external_sort"
 )
 
 type PageRankedArticle struct {
   PageRank float64
   Aliases []string
   PreprocessedPage
+}
+
+func (self *PageRankedArticle) LessThan(other external_sort.ComparableItem) bool {
+  return self.PageRank > other.(*PageRankedArticle).PageRank // desc
+}
+
+type PageRankedArticleGobHelper struct {}
+func (PageRankedArticleGobHelper) EncodeComparable(g *gob.Encoder, item external_sort.ComparableItem) error {
+  return g.Encode(item)
+}
+func (PageRankedArticleGobHelper) DecodeComparable(g *gob.Decoder) (external_sort.ComparableItem, error) {
+  var tmp PageRankedArticle
+  err := g.Decode(&tmp)
+  return &tmp, err
 }
 
 func PageRankPreprocessedPages(inputName string, outputName string) (err error) {
@@ -27,8 +43,8 @@ func PageRankPreprocessedPages(inputName string, outputName string) (err error) 
     } else {
       sequentialIdMap[pp.Title] = sequentialId
       sequentialId++
-      if sequentialId % 10000 == 0 {
-        log.Printf("Page %d", sequentialId)
+      if sequentialId % 100000 == 0 {
+        log.Printf("Id Map Page %d", sequentialId)
       }
     }
   }
@@ -51,7 +67,9 @@ func PageRankPreprocessedPages(inputName string, outputName string) (err error) 
       if redirectTo, ok := redirectTitleMap[linkTitle]; ok {
         linkId, ok = sequentialIdMap[redirectTo]
         if !ok {
-          log.Printf("Unresolvable redirect in '%s': '%s'", pp.Title, linkTitle)
+          if !titleFilter.MatchString(redirectTo) {
+            log.Printf("Unresolvable redirect in '%s': '%s'", pp.Title, redirectTo)
+          }
           continue
         }
       } else {
@@ -64,8 +82,8 @@ func PageRankPreprocessedPages(inputName string, outputName string) (err error) 
       nodes[sequentialId].OutboundNeighbors = append(nodes[sequentialId].OutboundNeighbors, linkId)
     }
     sequentialId++
-    if sequentialId % 10000 == 0 {
-      log.Printf("Page %d", sequentialId)
+    if sequentialId % 100000 == 0 {
+      log.Printf("Graph Page %d", sequentialId)
     }
   }
 
@@ -95,6 +113,7 @@ func PageRankPreprocessedPages(inputName string, outputName string) (err error) 
   pageOutputChan := make(chan *PageRankedArticle, 20000)
   writeDoneChan := make(chan bool)
   sequentialId = 0
+  go WritePageRankedArticles(outputName, pageOutputChan, writeDoneChan)
   go ReadPreprocessedPages(inputName, preprocessedPageInputChannel)
   for pp := range preprocessedPageInputChannel {
     if len(pp.RedirectTo) > 0 {
@@ -110,8 +129,8 @@ func PageRankPreprocessedPages(inputName string, outputName string) (err error) 
     pageOutputChan <- article
 
     sequentialId++
-    if sequentialId % 10000 == 0 {
-      log.Printf("Page %d", sequentialId)
+    if sequentialId % 100000 == 0 {
+      log.Printf("Output page %d", sequentialId)
     }
   }
   close(pageOutputChan)

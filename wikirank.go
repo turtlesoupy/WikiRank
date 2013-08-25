@@ -6,17 +6,21 @@ import (
   "math"
   "strconv"
   "runtime"
+  "encoding/gob"
+  "github.com/cosbynator/external_sort"
   "github.com/cosbynator/wikirank/ranklib"
   "github.com/cosbynator/wikirank/rankhttp"
 )
 
 func main() {
-  runtime.GOMAXPROCS(runtime.NumCPU()) // Mostly I/O bound, but why not
-
   if len(os.Args) <= 1 {
     log.Fatal("Not enough arguments")
     return
   }
+
+  runtime.GOMAXPROCS(runtime.NumCPU()) // Mostly I/O bound, but why not
+  gob.Register(ranklib.PageRankedArticle{})
+  gob.Register(ranklib.PreprocessedPage{})
 
   switch cmd := os.Args[1]; cmd {
   case "serve":
@@ -106,6 +110,44 @@ func main() {
     log.Printf("Ranking from '%s' into '%s'", inputFile, outputFile)
     err := ranklib.PageRankPreprocessedPages(inputFile, outputFile)
     if err != nil { panic(err) }
+  case "sort":
+    if len(os.Args) <= 3 {
+      log.Fatal("Sort: required argument 'input.gob' / 'output.gob' missing")
+      return
+    }
+
+    inputFile := os.Args[2]
+    outputFile := os.Args[3]
+    log.Printf("Sorting '%s' into '%s'", inputFile, outputFile)
+    input := make(chan *ranklib.PageRankedArticle, 20000)
+    inputSort := make(chan external_sort.ComparableItem, 20000)
+    outputSort:= make(chan external_sort.ComparableItem, 20000)
+    output := make(chan *ranklib.PageRankedArticle, 20000)
+    writeDoneChan := make(chan bool)
+
+    toSortAdapter := func() { for i := range input { inputSort <- external_sort.ComparableItem(i) }; close(inputSort) }
+    fromSortAdapter:= func() { for i := range outputSort { output <- i.(*ranklib.PageRankedArticle) }; close(output) }
+
+    go ranklib.ReadPageRankedArticles(inputFile, input)
+    go toSortAdapter()
+    go external_sort.ExternalSort(1000000, ranklib.PageRankedArticleGobHelper{}, inputSort, outputSort)
+    go fromSortAdapter()
+    go ranklib.WritePageRankedArticles(outputFile, output, writeDoneChan)
+
+    <-writeDoneChan
+
+  case "print":
+    if len(os.Args) <= 2 {
+      log.Fatal("Print requires input argument")
+    }
+
+    inputFile := os.Args[2]
+    articles := make(chan *ranklib.PageRankedArticle, 20000)
+    go ranklib.ReadPageRankedArticles(inputFile, articles)
+    for a := range articles {
+      log.Printf("%s: %f", a.Title, a.PageRank)
+    }
+
   default:
     log.Fatalf("Unknown command '%s'", cmd)
     return

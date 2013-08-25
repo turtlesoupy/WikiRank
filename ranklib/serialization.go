@@ -85,6 +85,7 @@ func ReadPageRankedArticles(fileName string, cp chan *PageRankedArticle) {
   defer f.Close()
 
   gobDecoder := gob.NewDecoder(f)
+  i := 0
   for {
     var page PageRankedArticle
     err := gobDecoder.Decode(&page)
@@ -94,6 +95,7 @@ func ReadPageRankedArticles(fileName string, cp chan *PageRankedArticle) {
       panic(err)
     }
     cp <- &page
+    i++
   }
 }
 
@@ -158,6 +160,7 @@ func WritePageRankedArticles(fileName string, cp chan *PageRankedArticle, done c
   gobEncoder := gob.NewEncoder(outputFile)
   for rp := range cp {
     if rp != nil {
+      log.Printf("%s: %.16f", rp.Title, rp.PageRank)
       gobEncoder.Encode(rp)
     } else {
       log.Printf("Null page while writing parsed pages")
