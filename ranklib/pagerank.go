@@ -10,7 +10,7 @@ type Graph struct {
 }
 
 type GraphNode struct {
-  OutboundNeighbors []uint32
+  OutboundNeighbors []int
 }
 
 func pageRankGraph(g Graph, walkProbability float64, convergenceCriteron float64) ([]float64) {
@@ -64,12 +64,12 @@ func pageRank(pages []Page, walkProbability float64, convergenceCriteron float64
   beta, epsilon := walkProbability, convergenceCriteron
   log.Printf("Ranking with beta='%f', epsilon='%f'", beta, epsilon)
   n := len(pages)
-  idRemap := make(map[uint64] uint32, n)
+  idRemap := make(map[uint64] int, n)
   lastRank := make([]float64, n)
   thisRank := make([]float64, n)
 
   for i := 0; i < n; i++ {
-    idRemap[pages[i].Id] = uint32(i)
+    idRemap[pages[i].Id] = int(i)
   }
 
   for iteration, lastChange := 1, math.MaxFloat64; lastChange > epsilon; iteration++ {

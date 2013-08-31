@@ -5,6 +5,7 @@ import (
   "io"
   "log"
   "fmt"
+  "sort"
   "regexp"
   "strings"
   "strconv"
@@ -205,6 +206,7 @@ func ReadFrom(fileName string, outputName string) (err error) {
   writeDoneChan := make(chan bool)
   go WritePages(outputName, len(pages), pageOutputChan, writeDoneChan)
   for _, p := range pages {
+    sort.Strings(p.Aliases)
     pageOutputChan <- p
   }
   close(pageOutputChan)
