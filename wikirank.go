@@ -139,6 +139,7 @@ func main() {
   case "print":
     if len(os.Args) <= 2 {
       log.Fatal("Print requires input argument")
+      return
     }
 
     inputFile := os.Args[2]
@@ -147,6 +148,25 @@ func main() {
     for a := range articles {
       log.Printf("%s: %f", a.Title, a.PageRank)
     }
+
+  case "filter_by_file":
+    if len(os.Args) <= 4 {
+      log.Fatal("Filter requires 3 arguments input.gob / filter.txt / output.gob")
+      return
+    }
+
+    inputFile := os.Args[2]
+    filterFile := os.Args[3]
+    outputFile := os.Args[4]
+
+    inputArticles:= make(chan *ranklib.PageRankedArticle, 20000)
+    filteredArticles := make(chan *ranklib.PageRankedArticle, 20000)
+    writeDoneChan := make(chan bool)
+
+    go ranklib.ReadPageRankedArticles(inputFile, inputArticles)
+    go ranklib.FilterPageRankedArticles(filterFile, ranklib.FilterOptions{}, inputArticles, filteredArticles)
+    go ranklib.WritePageRankedArticles(outputFile, filteredArticles, writeDoneChan)
+    <-writeDoneChan
 
   default:
     log.Fatalf("Unknown command '%s'", cmd)

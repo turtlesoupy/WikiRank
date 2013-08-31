@@ -79,6 +79,11 @@ func PageRankPreprocessedPages(inputName string, outputName string) (err error) 
           continue
         }
       }
+
+      if linkId == sequentialId {
+        continue // disallow self links
+      }
+
       nodes[sequentialId].OutboundNeighbors = append(nodes[sequentialId].OutboundNeighbors, linkId)
     }
     sequentialId++
